@@ -26,7 +26,7 @@ Desktop-приложение для аудита уязвимостей по ope
 ## Установка
 
 ```powershell
-git clone https://github.com/<username>/nvd-vault.git
+git clone https://github.com/MortalYar/nvd-vault.git
 cd nvd-vault
 
 # Создаём виртуальное окружение (Python 3.13)

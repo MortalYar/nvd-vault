@@ -1,6 +1,36 @@
-venv/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Project artifacts
+my-vault/
+test-vault/
 *.db
+*.sqlite
+
+# Сгенерированные пользователями vault'ы и архивы — не коммитим
+nvd_vault/webui/vendor/
+
+# Логи
+*.log

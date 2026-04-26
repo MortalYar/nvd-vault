@@ -1,5 +1,5 @@
 {
-  "vault_name": "My ELK Stack",
+  "vault_name": "Sample ELK Stack",
   "products": [
     {
       "name": "kibana",

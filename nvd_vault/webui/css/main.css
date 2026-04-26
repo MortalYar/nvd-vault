@@ -150,3 +150,83 @@ button:disabled { background: #45475a; cursor: not-allowed; }
     font-weight: 600;
     margin-left: 0.5rem;
 }
+
+/* Search */
+.search-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    align-items: stretch;
+}
+
+.search-bar input {
+    flex: 1;
+    font-size: 0.95rem;
+}
+
+#search-clear {
+    padding: 0 0.8rem;
+    background: #45475a;
+    color: #cdd6f4;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+#search-clear:hover { background: #585b70; }
+
+.search-results {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.search-results:empty { display: none; }
+
+.search-result {
+    background: #313244;
+    padding: 0.7rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    border-left: 3px solid #89b4fa;
+}
+
+.search-result:hover { background: #45475a; }
+
+.search-result-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.3rem;
+    font-size: 0.85rem;
+}
+
+.search-result-title {
+    color: #89b4fa;
+    font-family: "Consolas", monospace;
+    font-weight: 600;
+}
+
+.search-result-folder {
+    color: #6c7086;
+    font-size: 0.8rem;
+}
+
+.search-result-excerpt {
+    color: #a6adc8;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.search-result-excerpt mark {
+    background: #f9e2af;
+    color: #1e1e2e;
+    padding: 0 0.2rem;
+    border-radius: 2px;
+}
+
+.search-no-results {
+    color: #6c7086;
+    font-style: italic;
+    padding: 0.8rem;
+    text-align: center;
+}

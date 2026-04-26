@@ -149,6 +149,10 @@ function setupBrowseTab() {
     const meta = document.getElementById('vault-meta');
     const browser = document.getElementById('vault-browser');
     const filterInput = document.getElementById('filter-input');
+    const searchBar = document.getElementById('search-bar');
+    const searchInput = document.getElementById('search-input');
+    const searchClear = document.getElementById('search-clear');
+    const searchResults = document.getElementById('search-results');
 
     openBtn.addEventListener('click', async () => {
         const folder = await window.pywebview.api.select_vault_folder();
@@ -160,16 +164,19 @@ function setupBrowseTab() {
             return;
         }
 
+        const indexed = r.meta.indexed_notes !== undefined
+            ? `, проиндексировано ${r.meta.indexed_notes}` : '';
         meta.textContent = `${r.meta.vault_name} · ` +
-            `${r.meta.products_count} продуктов, ${r.meta.cves_count} CVE`;
+            `${r.meta.products_count} продуктов, ${r.meta.cves_count} CVE${indexed}`;
+
         browser.style.display = 'grid';
+        searchBar.style.display = 'flex';
         exportBtn.disabled = false;
 
         await loadNotesList();
     });
 
     exportBtn.addEventListener('click', async () => {
-        // Предлагаем имя файла на основе имени vault
         const vaultName = meta.textContent.split(' · ')[0] || 'vault';
         const safeName = vaultName.replace(/[^a-zA-Z0-9_-]/g, '_');
         const dateStr = new Date().toISOString().slice(0, 10);
@@ -190,7 +197,6 @@ function setupBrowseTab() {
             alert('Ошибка экспорта: ' + r.error);
             return;
         }
-
         alert(
             `Готово!\n\n` +
             `Файлов: ${r.files_added}\n` +
@@ -206,6 +212,94 @@ function setupBrowseTab() {
             li.style.display = visible ? '' : 'none';
         });
     });
+
+    // ---- Поиск ----
+    let searchTimeout = null;
+
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => doSearch(searchInput.value), 200);
+    });
+
+    searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchResults.innerHTML = '';
+    });
+
+    async function doSearch(query) {
+        if (!query || query.trim().length < 2) {
+            searchResults.innerHTML = '';
+            return;
+        }
+
+        const r = await window.pywebview.api.search_vault(query);
+        if (!r.ok) {
+            searchResults.innerHTML =
+                `<div class="search-no-results">Ошибка: ${escapeHtml(r.error)}</div>`;
+            return;
+        }
+
+        renderSearchResults(r.results, query);
+    }
+
+    function renderSearchResults(results, query) {
+        if (results.length === 0) {
+            searchResults.innerHTML =
+                `<div class="search-no-results">Ничего не найдено: "${escapeHtml(query)}"</div>`;
+            return;
+        }
+
+        // Если первый результат -- ошибка от FTS
+        if (results[0]?.error) {
+            searchResults.innerHTML =
+                `<div class="search-no-results">${escapeHtml(results[0].error)}</div>`;
+            return;
+        }
+
+        searchResults.innerHTML = results.map(r => {
+            const folder = r.folder === 'cves' ? 'CVE'
+                         : r.folder === 'products' ? 'Продукт'
+                         : 'CWE';
+            // excerpt уже содержит <mark>...</mark> от FTS5 -- не экранируем целиком
+            const excerpt = sanitizeExcerpt(r.excerpt || '');
+            return `
+                <div class="search-result" data-path="${escapeHtml(r.relative_path)}">
+                    <div class="search-result-header">
+                        <span class="search-result-title">${escapeHtml(r.title)}</span>
+                        <span class="search-result-folder">${folder}</span>
+                    </div>
+                    <div class="search-result-excerpt">${excerpt}</div>
+                </div>
+            `;
+        }).join('');
+
+        searchResults.querySelectorAll('.search-result').forEach(el => {
+            el.addEventListener('click', () => {
+                const path = el.dataset.path;
+                openNote(path, null);
+                // Активируем в sidebar
+                const noteName = path.split('/').pop().replace('.md', '');
+                document.querySelectorAll('.note-group li').forEach(li => {
+                    if (li.textContent === noteName) {
+                        li.classList.add('active');
+                        li.scrollIntoView({block: 'nearest'});
+                    }
+                });
+            });
+        });
+    }
+
+    function sanitizeExcerpt(html) {
+        // Разрешаем только <mark>, всё остальное экранируем
+        // Простой подход: сначала экранируем всё, потом возвращаем <mark>
+        const escaped = html
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        return escaped
+            .replace(/&lt;mark&gt;/g, '<mark>')
+            .replace(/&lt;\/mark&gt;/g, '</mark>');
+    }
 }
 
 async function loadNotesList() {

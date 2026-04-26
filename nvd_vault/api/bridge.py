@@ -12,6 +12,7 @@ from typing import Optional
 
 import webview
 
+from nvd_vault.core.search_index import SearchIndex
 from nvd_vault.core.inventory import load_inventory
 from nvd_vault.core.matcher import cpe_matches_version
 from nvd_vault.core.nvd_client import NvdClient
@@ -23,6 +24,7 @@ class Api:
         self._progress_log: list[str] = []
         self._build_running = False
         self._current_vault: Optional[Path] = None
+        self._search_index: Optional[SearchIndex] = None
 
     # ---------- Утилиты ----------
 
@@ -153,6 +155,17 @@ class Api:
             return {"ok": False, "error": f"Не удалось прочитать meta.json: {e}"}
 
         self._current_vault = path
+
+        # Перестраиваем индекс под новый vault
+        if self._search_index:
+            self._search_index.close()
+        self._search_index = SearchIndex()
+        try:
+            stats = self._search_index.build(path)
+            meta["indexed_notes"] = stats["indexed"]
+        except Exception as e:
+            meta["index_error"] = str(e)
+
         return {"ok": True, "meta": meta, "path": str(path)}
 
     def list_vault_notes(self) -> dict:
@@ -221,6 +234,21 @@ class Api:
 
         return {"ok": True, "found": False}
     
+    def search_vault(self, query: str) -> dict:
+            """Полнотекстовый поиск по открытому vault."""
+            if not self._current_vault:
+                return {"ok": False, "error": "Vault не открыт"}
+            if not self._search_index:
+                return {"ok": False, "error": "Индекс не построен"}
+
+            query = (query or "").strip()
+            if len(query) < 2:
+                return {"ok": True, "results": [], "query": query}
+
+            results = self._search_index.search(query, limit=50)
+            return {"ok": True, "results": results, "query": query}
+
+    
 
     # ---------- Экспорт ----------
 
@@ -263,7 +291,9 @@ class Api:
             }
         except Exception as e:
             return {"ok": False, "error": f"Ошибка архивирования: {e}"}
+        
 
+        
 
 # ---------- Утилиты модуля ----------
 

@@ -1,11 +1,13 @@
 """API, доступное из JavaScript через window.pywebview.api."""
 
+import json
 import os
+import re
 import subprocess
 import sys
-
 import threading
 from pathlib import Path
+from typing import Optional
 
 import webview
 
@@ -17,17 +19,28 @@ from nvd_vault.core.vault_builder import VaultBuilder
 
 class Api:
     def __init__(self) -> None:
-        # Сюда складываем сообщения прогресса, фронт их забирает
         self._progress_log: list[str] = []
         self._build_running = False
+        self._current_vault: Optional[Path] = None
 
     # ---------- Утилиты ----------
 
     def ping(self) -> str:
         return "pong: связь с Python работает"
 
+    def open_path_in_explorer(self, path: str) -> dict:
+        try:
+            if sys.platform == "win32":
+                os.startfile(path)
+            elif sys.platform == "darwin":
+                subprocess.run(["open", path], check=True)
+            else:
+                subprocess.run(["xdg-open", path], check=True)
+            return {"ok": True}
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
     def select_inventory_file(self) -> dict:
-        """Открывает диалог выбора inventory.json."""
         result = webview.windows[0].create_file_dialog(
             webview.OPEN_DIALOG,
             file_types=("JSON files (*.json)", "All files (*.*)"),
@@ -37,10 +50,7 @@ class Api:
         return {"ok": True, "path": result[0]}
 
     def select_vault_folder(self) -> dict:
-        """Открывает диалог выбора папки для vault'а."""
-        result = webview.windows[0].create_file_dialog(
-            webview.FOLDER_DIALOG,
-        )
+        result = webview.windows[0].create_file_dialog(webview.FOLDER_DIALOG)
         if not result:
             return {"ok": False, "error": "Папка не выбрана"}
         return {"ok": True, "path": result[0]}
@@ -88,10 +98,6 @@ class Api:
 
     def build_vault(self, inventory_path: str, vault_path: str,
                     api_key: str = None) -> dict:
-        """
-        Запускает асинхронную сборку vault.
-        Возвращает сразу, не блокируя UI.
-        """
         if self._build_running:
             return {"ok": False, "error": "Сборка уже запущена"}
 
@@ -111,7 +117,9 @@ class Api:
                     progress_callback=lambda msg: self._progress_log.append(msg),
                 )
                 meta = builder.build(inventory)
-                self._progress_log.append(f"DONE::{meta['cves_count']}::{meta['products_count']}")
+                self._progress_log.append(
+                    f"DONE::{meta['cves_count']}::{meta['products_count']}"
+                )
             except Exception as e:
                 self._progress_log.append(f"ERROR::{e}")
             finally:
@@ -121,22 +129,149 @@ class Api:
         return {"ok": True, "started": True}
 
     def get_build_progress(self) -> dict:
-        """Фронт периодически дёргает и забирает накопленные сообщения."""
-        log = self._progress_log[:]
         return {
             "running": self._build_running,
-            "messages": log,
+            "messages": self._progress_log[:],
         }
-    
-    def open_path_in_explorer(self, path: str) -> dict:
-        """Открыть путь в системном файловом менеджере."""
+
+    # ---------- Vault browser ----------
+
+    def open_vault(self, vault_path: str) -> dict:
+        """Открыть существующий vault для просмотра."""
+        path = Path(vault_path)
+        if not path.exists() or not path.is_dir():
+            return {"ok": False, "error": "Папка не существует"}
+
+        meta_file = path / "meta.json"
+        if not meta_file.exists():
+            return {"ok": False, "error": "Это не похоже на vault (нет meta.json)"}
+
         try:
-            if sys.platform == "win32":
-                os.startfile(path)
-            elif sys.platform == "darwin":
-                subprocess.run(["open", path], check=True)
-            else:
-                subprocess.run(["xdg-open", path], check=True)
-            return {"ok": True}
+            meta = json.loads(meta_file.read_text(encoding="utf-8"))
         except Exception as e:
-            return {"ok": False, "error": str(e)}
+            return {"ok": False, "error": f"Не удалось прочитать meta.json: {e}"}
+
+        self._current_vault = path
+        return {"ok": True, "meta": meta, "path": str(path)}
+
+    def list_vault_notes(self) -> dict:
+        """Вернуть список всех заметок vault, сгруппированных по типу."""
+        if not self._current_vault:
+            return {"ok": False, "error": "Vault не открыт"}
+
+        result: dict[str, list[dict]] = {"products": [], "cves": [], "cwes": []}
+
+        for subfolder in ("products", "cves", "cwes"):
+            folder = self._current_vault / subfolder
+            if not folder.exists():
+                continue
+            for f in sorted(folder.glob("*.md")):
+                fm = _read_frontmatter(f)
+                result[subfolder].append({
+                    "name": f.stem,
+                    "path": f.name,  # относительный
+                    "frontmatter": fm,
+                })
+
+        return {"ok": True, "notes": result}
+
+    def read_note(self, relative_path: str) -> dict:
+        """Прочитать содержимое заметки."""
+        if not self._current_vault:
+            return {"ok": False, "error": "Vault не открыт"}
+
+        # Безопасность: запрещаем выход за пределы vault
+        target = (self._current_vault / relative_path).resolve()
+        try:
+            target.relative_to(self._current_vault.resolve())
+        except ValueError:
+            return {"ok": False, "error": "Недопустимый путь"}
+
+        if not target.exists() or not target.is_file():
+            return {"ok": False, "error": "Файл не найден"}
+
+        try:
+            content = target.read_text(encoding="utf-8")
+        except Exception as e:
+            return {"ok": False, "error": f"Не удалось прочитать: {e}"}
+
+        return {
+            "ok": True,
+            "path": relative_path,
+            "name": target.stem,
+            "content": content,
+            "frontmatter": _parse_frontmatter_block(content)[0],
+        }
+
+    def resolve_wikilink(self, link: str) -> dict:
+        """Найти заметку по имени из [[wiki-link]]."""
+        if not self._current_vault:
+            return {"ok": False, "error": "Vault не открыт"}
+
+        # Ищем во всех трёх папках
+        for subfolder in ("products", "cves", "cwes"):
+            candidate = self._current_vault / subfolder / f"{link}.md"
+            if candidate.exists():
+                return {
+                    "ok": True,
+                    "found": True,
+                    "relative_path": f"{subfolder}/{candidate.name}",
+                }
+
+        return {"ok": True, "found": False}
+
+
+# ---------- Утилиты модуля ----------
+
+_FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
+
+
+def _parse_frontmatter_block(content: str) -> tuple[dict, str]:
+    """Разбирает YAML frontmatter в начале файла. Возвращает (dict, body)."""
+    match = _FRONTMATTER_RE.match(content)
+    if not match:
+        return {}, content
+
+    yaml_text = match.group(1)
+    body = content[match.end():]
+
+    # Простой парсер строк "key: value"
+    fm: dict = {}
+    for line in yaml_text.split("\n"):
+        if ":" not in line:
+            continue
+        key, _, value = line.partition(":")
+        fm[key.strip()] = _parse_yaml_value(value.strip())
+
+    return fm, body
+
+
+def _parse_yaml_value(value: str):
+    """Простейший парсер: списки [a, b], числа, bool, строки."""
+    if not value:
+        return None
+    if value.startswith("[") and value.endswith("]"):
+        inner = value[1:-1].strip()
+        if not inner:
+            return []
+        return [item.strip() for item in inner.split(",")]
+    if value in ("true", "false"):
+        return value == "true"
+    if value == "null":
+        return None
+    try:
+        if "." in value:
+            return float(value)
+        return int(value)
+    except ValueError:
+        return value
+
+
+def _read_frontmatter(path: Path) -> dict:
+    """Читает только frontmatter, без тела (быстрее для списков)."""
+    try:
+        content = path.read_text(encoding="utf-8")
+    except Exception:
+        return {}
+    fm, _ = _parse_frontmatter_block(content)
+    return fm

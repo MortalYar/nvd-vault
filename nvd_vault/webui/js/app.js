@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupTabs();
     setupScanTab();
     setupVaultTab();
+    setupBrowseTab();
 });
 
 // ---------- Табы ----------
@@ -86,7 +87,7 @@ function escapeHtml(str) {
     return d.innerHTML;
 }
 
-// ---------- Tab 2: сборка vault'а ----------
+// ---------- Tab 2: сборка vault ----------
 
 function setupVaultTab() {
     const pickInv = document.getElementById('pick-inventory');
@@ -129,20 +130,160 @@ function setupVaultTab() {
             return;
         }
 
-        // Поллим прогресс каждые 500мс
         const interval = setInterval(async () => {
             const p = await window.pywebview.api.get_build_progress();
             log.textContent = p.messages.join('\n');
             if (!p.running) {
                 clearInterval(interval);
                 buildBtn.disabled = false;
-
-                // Автоматически открыть папку vault'а после сборки
-                const lastMsg = p.messages[p.messages.length - 1] || '';
-                if (lastMsg.startsWith('DONE::')) {
-                    await window.pywebview.api.open_path_in_explorer(vaultInput.value);
-                }
             }
         }, 500);
+    });
+}
+
+// ---------- Tab 3: просмотр vault ----------
+
+function setupBrowseTab() {
+    const openBtn = document.getElementById('open-vault-btn');
+    const meta = document.getElementById('vault-meta');
+    const browser = document.getElementById('vault-browser');
+    const filterInput = document.getElementById('filter-input');
+
+    openBtn.addEventListener('click', async () => {
+        const folder = await window.pywebview.api.select_vault_folder();
+        if (!folder.ok) return;
+
+        const r = await window.pywebview.api.open_vault(folder.path);
+        if (!r.ok) {
+            meta.textContent = 'Ошибка: ' + r.error;
+            return;
+        }
+
+        meta.textContent = `${r.meta.vault_name} · ` +
+            `${r.meta.products_count} продуктов, ${r.meta.cves_count} CVE`;
+        browser.style.display = 'grid';
+
+        await loadNotesList();
+    });
+
+    filterInput.addEventListener('input', () => {
+        const q = filterInput.value.toLowerCase();
+        document.querySelectorAll('.note-group li').forEach(li => {
+            const visible = li.textContent.toLowerCase().includes(q);
+            li.style.display = visible ? '' : 'none';
+        });
+    });
+}
+
+async function loadNotesList() {
+    const r = await window.pywebview.api.list_vault_notes();
+    if (!r.ok) {
+        console.error(r.error);
+        return;
+    }
+
+    fillList('list-products', r.notes.products);
+    fillList('list-cves', r.notes.cves);
+    fillList('list-cwes', r.notes.cwes);
+}
+
+function fillList(elementId, notes) {
+    const ul = document.getElementById(elementId);
+    ul.innerHTML = '';
+
+    if (notes.length === 0) {
+        ul.innerHTML = '<li style="color:#6c7086;font-style:italic;cursor:default;">пусто</li>';
+        return;
+    }
+
+    for (const note of notes) {
+        const li = document.createElement('li');
+        li.textContent = note.name;
+
+        // Цветовая индикация для CVE
+        const sev = note.frontmatter?.severity;
+        if (sev) li.classList.add('sev-' + sev);
+
+        // Определяем тип папки по элементу-контейнеру
+        const folder = elementId.replace('list-', '');
+        const subfolder = folder === 'cves' ? 'cves'
+                        : folder === 'products' ? 'products'
+                        : 'cwes';
+        const relativePath = `${subfolder}/${note.path}`;
+
+        li.addEventListener('click', () => openNote(relativePath, li));
+        ul.appendChild(li);
+    }
+}
+
+async function openNote(relativePath, listItem) {
+    const r = await window.pywebview.api.read_note(relativePath);
+    if (!r.ok) {
+        document.getElementById('note-content').innerHTML =
+            `<p style="color:#f38ba8;">Ошибка: ${escapeHtml(r.error)}</p>`;
+        return;
+    }
+
+    // Помечаем активный элемент
+    document.querySelectorAll('.note-group li').forEach(li => li.classList.remove('active'));
+    if (listItem) listItem.classList.add('active');
+
+    // Вырезаем frontmatter перед рендером (он уже распарсен)
+    const body = stripFrontmatter(r.content);
+
+    // Обрабатываем wiki-links перед marked
+    const processedBody = await processWikilinks(body);
+
+    // Рендерим markdown
+    const html = marked.parse(processedBody);
+    document.getElementById('note-content').innerHTML = html;
+
+    // Навешиваем обработчики на wiki-links
+    document.querySelectorAll('.markdown-body .wikilink').forEach(el => {
+        if (el.classList.contains('broken')) return;
+        el.addEventListener('click', () => {
+            const target = el.dataset.target;
+            if (target) {
+                openNote(target, null);
+                // Также активируем в sidebar
+                const allLis = document.querySelectorAll('.note-group li');
+                for (const li of allLis) {
+                    if (li.textContent === el.dataset.linkName) {
+                        li.classList.add('active');
+                        li.scrollIntoView({block: 'nearest'});
+                        break;
+                    }
+                }
+            }
+        });
+    });
+}
+
+function stripFrontmatter(content) {
+    const match = content.match(/^---\n[\s\S]*?\n---\n/);
+    return match ? content.slice(match[0].length) : content;
+}
+
+async function processWikilinks(body) {
+    // Находим все [[wiki-link]] и подменяем на HTML-теги
+    const matches = [...body.matchAll(/\[\[([^\]]+)\]\]/g)];
+    if (matches.length === 0) return body;
+
+    // Резолвим каждую ссылку через бэк
+    const linkMap = new Map();
+    for (const m of matches) {
+        const linkName = m[1];
+        if (linkMap.has(linkName)) continue;
+        const r = await window.pywebview.api.resolve_wikilink(linkName);
+        linkMap.set(linkName, r.found ? r.relative_path : null);
+    }
+
+    // Подменяем
+    return body.replace(/\[\[([^\]]+)\]\]/g, (full, linkName) => {
+        const target = linkMap.get(linkName);
+        if (target) {
+            return `<span class="wikilink" data-target="${target}" data-link-name="${linkName}">${linkName}</span>`;
+        }
+        return `<span class="wikilink broken" title="Заметка не найдена">${linkName}</span>`;
     });
 }

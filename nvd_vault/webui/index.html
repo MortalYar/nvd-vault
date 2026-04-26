@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>NVD Vault</title>
     <link rel="stylesheet" href="css/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -12,9 +13,9 @@
         <div class="tabs">
             <button class="tab active" data-tab="scan">Быстрое сканирование</button>
             <button class="tab" data-tab="vault">Сборка Vault</button>
+            <button class="tab" data-tab="browse">Просмотр Vault</button>
         </div>
 
-        <!-- Tab: одиночное сканирование -->
         <section id="tab-scan" class="tab-content active">
             <div class="form">
                 <label>Продукт: <input type="text" id="product" value="kibana"></label>
@@ -26,7 +27,6 @@
             <div id="scan-results"></div>
         </section>
 
-        <!-- Tab: сборка vault'а -->
         <section id="tab-vault" class="tab-content">
             <div class="form">
                 <label>
@@ -46,6 +46,36 @@
                 <button id="build-btn" disabled>Собрать Vault</button>
             </div>
             <div id="build-log"></div>
+        </section>
+
+        <section id="tab-browse" class="tab-content">
+            <div class="vault-toolbar">
+                <button id="open-vault-btn">Открыть Vault...</button>
+                <span id="vault-meta"></span>
+            </div>
+
+            <div class="vault-browser" id="vault-browser" style="display:none;">
+                <aside class="sidebar">
+                    <input type="text" id="filter-input" placeholder="Фильтр...">
+                    <div class="note-group">
+                        <h3>Продукты</h3>
+                        <ul id="list-products"></ul>
+                    </div>
+                    <div class="note-group">
+                        <h3>CVE</h3>
+                        <ul id="list-cves"></ul>
+                    </div>
+                    <div class="note-group">
+                        <h3>CWE</h3>
+                        <ul id="list-cwes"></ul>
+                    </div>
+                </aside>
+                <main class="note-view">
+                    <div id="note-content" class="markdown-body">
+                        <p class="hint">Выбери заметку слева.</p>
+                    </div>
+                </main>
+            </div>
         </section>
     </div>
     <script src="js/app.js"></script>

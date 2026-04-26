@@ -13,7 +13,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
 }
 
@@ -23,8 +23,39 @@ h1 {
 }
 
 p {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     line-height: 1.6;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    background: #313244;
+    padding: 1.2rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.9rem;
+}
+
+input {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border: 1px solid #45475a;
+    padding: 0.5rem 0.7rem;
+    border-radius: 4px;
+    font-size: 0.95rem;
+}
+
+input:focus {
+    outline: none;
+    border-color: #89b4fa;
 }
 
 button {
@@ -36,17 +67,71 @@ button {
     cursor: pointer;
     font-size: 0.95rem;
     font-weight: 500;
+    align-self: flex-start;
 }
 
 button:hover {
     background: #b4befe;
 }
 
-#result {
-    margin-top: 1rem;
+button:disabled {
+    background: #45475a;
+    cursor: not-allowed;
+}
+
+#status {
     padding: 0.8rem;
     background: #313244;
     border-radius: 4px;
     font-family: "Consolas", monospace;
-    min-height: 1rem;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    min-height: 1.2rem;
+}
+
+.cve-card {
+    background: #313244;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 0.8rem;
+    border-left: 4px solid #45475a;
+}
+
+.cve-card.critical { border-left-color: #f38ba8; }
+.cve-card.high { border-left-color: #fab387; }
+.cve-card.medium { border-left-color: #f9e2af; }
+.cve-card.low { border-left-color: #a6e3a1; }
+
+.cve-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.cve-id {
+    font-weight: 600;
+    color: #89b4fa;
+    font-family: "Consolas", monospace;
+}
+
+.cve-meta {
+    font-size: 0.85rem;
+    color: #a6adc8;
+}
+
+.cve-desc {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #cdd6f4;
+}
+
+.kev-badge {
+    background: #f38ba8;
+    color: #1e1e2e;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    font-weight: 600;
+    margin-left: 0.5rem;
 }

@@ -8,9 +8,26 @@
 <body>
     <div class="container">
         <h1>NVD Vault</h1>
-        <p>Приложение запущено. Это заглушка стартовой страницы.</p>
-        <button id="ping-btn">Проверить связь с Python</button>
-        <p id="result"></p>
+        <p>Введи продукт и версию для тестового сканирования.</p>
+
+        <div class="form">
+            <label>
+                Продукт:
+                <input type="text" id="product" value="kibana">
+            </label>
+            <label>
+                Версия:
+                <input type="text" id="version" value="8.19.9">
+            </label>
+            <label>
+                Vendor (опционально):
+                <input type="text" id="vendor" value="elastic">
+            </label>
+            <button id="scan-btn">Сканировать</button>
+        </div>
+
+        <div id="status"></div>
+        <div id="results"></div>
     </div>
     <script src="js/app.js"></script>
 </body>

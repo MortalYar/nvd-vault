@@ -136,6 +136,12 @@ function setupVaultTab() {
             if (!p.running) {
                 clearInterval(interval);
                 buildBtn.disabled = false;
+
+                // Автоматически открыть папку vault'а после сборки
+                const lastMsg = p.messages[p.messages.length - 1] || '';
+                if (lastMsg.startsWith('DONE::')) {
+                    await window.pywebview.api.open_path_in_explorer(vaultInput.value);
+                }
             }
         }, 500);
     });

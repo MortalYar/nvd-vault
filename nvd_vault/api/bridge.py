@@ -1,5 +1,9 @@
 """API, доступное из JavaScript через window.pywebview.api."""
 
+import os
+import subprocess
+import sys
+
 import threading
 from pathlib import Path
 
@@ -123,3 +127,16 @@ class Api:
             "running": self._build_running,
             "messages": log,
         }
+    
+    def open_path_in_explorer(self, path: str) -> dict:
+        """Открыть путь в системном файловом менеджере."""
+        try:
+            if sys.platform == "win32":
+                os.startfile(path)
+            elif sys.platform == "darwin":
+                subprocess.run(["open", path], check=True)
+            else:
+                subprocess.run(["xdg-open", path], check=True)
+            return {"ok": True}
+        except Exception as e:
+            return {"ok": False, "error": str(e)}

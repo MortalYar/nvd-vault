@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import threading
+import zipfile
 from pathlib import Path
 from typing import Optional
 
@@ -219,6 +220,49 @@ class Api:
                 }
 
         return {"ok": True, "found": False}
+    
+
+    # ---------- Экспорт ----------
+
+    def select_export_zip_path(self, default_name: str = "vault.zip") -> dict:
+        """Диалог сохранения файла для ZIP-архива."""
+        result = webview.windows[0].create_file_dialog(
+            webview.SAVE_DIALOG,
+            save_filename=default_name,
+            file_types=("ZIP archive (*.zip)", "All files (*.*)"),
+        )
+        if not result:
+            return {"ok": False, "error": "Файл не выбран"}
+        path = result if isinstance(result, str) else result[0]
+        return {"ok": True, "path": path}
+
+    def export_vault_zip(self, zip_path: str) -> dict:
+        """Запаковать текущий открытый vault в ZIP."""
+        if not self._current_vault:
+            return {"ok": False, "error": "Vault не открыт"}
+
+        vault = self._current_vault
+        zip_target = Path(zip_path)
+
+        try:
+            files_added = 0
+            with zipfile.ZipFile(zip_target, "w", zipfile.ZIP_DEFLATED) as zf:
+                for file_path in vault.rglob("*"):
+                    if not file_path.is_file():
+                        continue
+                    arcname = file_path.relative_to(vault)
+                    zf.write(file_path, arcname=str(arcname))
+                    files_added += 1
+
+            size_mb = zip_target.stat().st_size / (1024 * 1024)
+            return {
+                "ok": True,
+                "files_added": files_added,
+                "size_mb": round(size_mb, 2),
+                "path": str(zip_target),
+            }
+        except Exception as e:
+            return {"ok": False, "error": f"Ошибка архивирования: {e}"}
 
 
 # ---------- Утилиты модуля ----------

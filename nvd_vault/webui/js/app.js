@@ -145,6 +145,7 @@ function setupVaultTab() {
 
 function setupBrowseTab() {
     const openBtn = document.getElementById('open-vault-btn');
+    const exportBtn = document.getElementById('export-btn');
     const meta = document.getElementById('vault-meta');
     const browser = document.getElementById('vault-browser');
     const filterInput = document.getElementById('filter-input');
@@ -162,8 +163,40 @@ function setupBrowseTab() {
         meta.textContent = `${r.meta.vault_name} · ` +
             `${r.meta.products_count} продуктов, ${r.meta.cves_count} CVE`;
         browser.style.display = 'grid';
+        exportBtn.disabled = false;
 
         await loadNotesList();
+    });
+
+    exportBtn.addEventListener('click', async () => {
+        // Предлагаем имя файла на основе имени vault
+        const vaultName = meta.textContent.split(' · ')[0] || 'vault';
+        const safeName = vaultName.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const defaultName = `${safeName}_${dateStr}.zip`;
+
+        const dlg = await window.pywebview.api.select_export_zip_path(defaultName);
+        if (!dlg.ok) return;
+
+        exportBtn.disabled = true;
+        exportBtn.textContent = 'Архивирую...';
+
+        const r = await window.pywebview.api.export_vault_zip(dlg.path);
+
+        exportBtn.textContent = 'Экспорт в ZIP';
+        exportBtn.disabled = false;
+
+        if (!r.ok) {
+            alert('Ошибка экспорта: ' + r.error);
+            return;
+        }
+
+        alert(
+            `Готово!\n\n` +
+            `Файлов: ${r.files_added}\n` +
+            `Размер: ${r.size_mb} МБ\n` +
+            `Путь: ${r.path}`
+        );
     });
 
     filterInput.addEventListener('input', () => {

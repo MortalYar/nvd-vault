@@ -1,0 +1,15 @@
+{
+  "vault_name": "My ELK Stack",
+  "products": [
+    {
+      "name": "kibana",
+      "version": "8.19.9",
+      "vendor": "elastic"
+    },
+    {
+      "name": "logstash",
+      "version": "8.19.5",
+      "vendor": "elastic"
+    }
+  ]
+}

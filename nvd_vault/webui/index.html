@@ -8,26 +8,45 @@
 <body>
     <div class="container">
         <h1>NVD Vault</h1>
-        <p>Введи продукт и версию для тестового сканирования.</p>
 
-        <div class="form">
-            <label>
-                Продукт:
-                <input type="text" id="product" value="kibana">
-            </label>
-            <label>
-                Версия:
-                <input type="text" id="version" value="8.19.9">
-            </label>
-            <label>
-                Vendor (опционально):
-                <input type="text" id="vendor" value="elastic">
-            </label>
-            <button id="scan-btn">Сканировать</button>
+        <div class="tabs">
+            <button class="tab active" data-tab="scan">Быстрое сканирование</button>
+            <button class="tab" data-tab="vault">Сборка Vault</button>
         </div>
 
-        <div id="status"></div>
-        <div id="results"></div>
+        <!-- Tab: одиночное сканирование -->
+        <section id="tab-scan" class="tab-content active">
+            <div class="form">
+                <label>Продукт: <input type="text" id="product" value="kibana"></label>
+                <label>Версия: <input type="text" id="version" value="8.19.9"></label>
+                <label>Vendor: <input type="text" id="vendor" value="elastic"></label>
+                <button id="scan-btn">Сканировать</button>
+            </div>
+            <div id="scan-status"></div>
+            <div id="scan-results"></div>
+        </section>
+
+        <!-- Tab: сборка vault'а -->
+        <section id="tab-vault" class="tab-content">
+            <div class="form">
+                <label>
+                    Inventory.json:
+                    <div class="file-row">
+                        <input type="text" id="inventory-path" readonly placeholder="не выбран">
+                        <button id="pick-inventory">Выбрать...</button>
+                    </div>
+                </label>
+                <label>
+                    Папка для vault:
+                    <div class="file-row">
+                        <input type="text" id="vault-path" readonly placeholder="не выбрана">
+                        <button id="pick-vault">Выбрать...</button>
+                    </div>
+                </label>
+                <button id="build-btn" disabled>Собрать Vault</button>
+            </div>
+            <div id="build-log"></div>
+        </section>
     </div>
     <script src="js/app.js"></script>
 </body>

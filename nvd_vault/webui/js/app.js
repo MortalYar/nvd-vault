@@ -749,9 +749,25 @@ function fillList(elementId, notes) {
         const li = document.createElement('li');
         li.textContent = note.name;
 
-        // Цветовая индикация для CVE
+        // Цветовая индикация: приоритет risk_tier, fallback на severity
+        const tier = note.frontmatter?.risk_tier;
         const sev = note.frontmatter?.severity;
-        if (sev) li.classList.add('sev-' + sev);
+        if (tier) {
+            li.classList.add('tier-' + tier);
+        } else if (sev) {
+            li.classList.add('sev-' + sev);
+        }
+
+        // Иконка KEV/ransomware рядом с именем
+        const isKev = String(note.frontmatter?.kev || '').toLowerCase() === 'true';
+        const isRansom = String(note.frontmatter?.ransomware || '').toLowerCase() === 'true';
+        if (isKev || isRansom) {
+            const icons = document.createElement('span');
+            icons.className = 'note-badges';
+            if (isKev) icons.textContent += '⚠';
+            if (isRansom) icons.textContent += '🔒';
+            li.appendChild(icons);
+        }
 
         // Определяем тип папки по элементу-контейнеру
         const folder = elementId.replace('list-', '');

@@ -802,3 +802,16 @@ button:disabled { background: #45475a; cursor: not-allowed; }
     margin-left: auto;
     font-style: italic;
 }
+
+/* Risk tier в sidebar (приоритетнее severity) */
+.note-group li.tier-critical_now    { border-left-color: #f38ba8; background: rgba(243, 139, 168, 0.08); }
+.note-group li.tier-critical_likely { border-left-color: #f38ba8; }
+.note-group li.tier-high            { border-left-color: #fab387; }
+.note-group li.tier-medium          { border-left-color: #f9e2af; }
+.note-group li.tier-low             { border-left-color: #a6e3a1; }
+
+.note-badges {
+    margin-left: 0.4rem;
+    font-size: 0.78rem;
+    opacity: 0.8;
+}

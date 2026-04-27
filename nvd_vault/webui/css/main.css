@@ -230,3 +230,78 @@ button:disabled { background: #45475a; cursor: not-allowed; }
     padding: 0.8rem;
     text-align: center;
 }
+/* Graph */
+.graph-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.8rem;
+}
+
+#graph-stats {
+    color: #a6adc8;
+    font-size: 0.9rem;
+}
+
+.graph-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    background: #313244;
+    padding: 0.7rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 0.8rem;
+    font-size: 0.88rem;
+}
+
+.graph-controls .check {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.graph-controls input[type="checkbox"] {
+    cursor: pointer;
+    width: auto;
+    margin: 0;
+}
+
+.graph-controls .separator {
+    color: #45475a;
+}
+
+.graph-controls button {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.85rem;
+}
+
+.graph-container {
+    background: #181825;
+    border-radius: 6px;
+    height: calc(100vh - 280px);
+    min-height: 500px;
+    width: 100%;
+    position: relative;
+}
+
+.graph-tooltip {
+    position: fixed;
+    z-index: 1000;
+    background: #1e1e2e;
+    border: 1px solid #45475a;
+    color: #cdd6f4;
+    padding: 0.6rem 0.9rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    pointer-events: none;
+    max-width: 300px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.graph-tooltip strong {
+    color: #89b4fa;
+}

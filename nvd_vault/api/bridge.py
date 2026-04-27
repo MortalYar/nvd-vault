@@ -12,6 +12,7 @@ from typing import Optional
 
 import webview
 
+from nvd_vault.core.graph_builder import build_graph
 from nvd_vault.core.search_index import SearchIndex
 from nvd_vault.core.inventory import load_inventory
 from nvd_vault.core.matcher import cpe_matches_version
@@ -247,6 +248,17 @@ class Api:
 
             results = self._search_index.search(query, limit=50)
             return {"ok": True, "results": results, "query": query}
+    
+    def get_graph_data(self) -> dict:
+        """Собрать узлы и рёбра графа vault'а."""
+        if not self._current_vault:
+            return {"ok": False, "error": "Vault не открыт"}
+
+        try:
+            data = build_graph(self._current_vault)
+            return {"ok": True, **data}
+        except Exception as e:
+            return {"ok": False, "error": f"Ошибка сборки графа: {e}"}
 
     
 

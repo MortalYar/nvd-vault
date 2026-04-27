@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupScanTab();
     setupVaultTab();
     setupBrowseTab();
+    setupGraphTab();
 });
 
 // ---------- Табы ----------
@@ -412,5 +413,274 @@ async function processWikilinks(body) {
             return `<span class="wikilink" data-target="${target}" data-link-name="${linkName}">${linkName}</span>`;
         }
         return `<span class="wikilink broken" title="Заметка не найдена">${linkName}</span>`;
+    });
+}
+
+// ---------- Tab 4: граф ----------
+
+let graphInstance = null;
+let graphRawData = null;
+
+function setupGraphTab() {
+    const loadBtn = document.getElementById('graph-load-btn');
+    const stats = document.getElementById('graph-stats');
+    const controls = document.getElementById('graph-controls');
+    const fitBtn = document.getElementById('graph-fit');
+    const relayoutBtn = document.getElementById('graph-relayout');
+
+    loadBtn.addEventListener('click', async () => {
+        loadBtn.disabled = true;
+        loadBtn.textContent = 'Загружаю...';
+
+        const r = await window.pywebview.api.get_graph_data();
+        loadBtn.disabled = false;
+        loadBtn.textContent = 'Перестроить граф';
+
+        if (!r.ok) {
+            stats.textContent = 'Ошибка: ' + r.error;
+            return;
+        }
+
+        graphRawData = r;
+        stats.textContent =
+            `${r.stats.products} продуктов · ${r.stats.cves} CVE · ` +
+            `${r.stats.cwes} CWE · ${r.stats.edges} связей`;
+
+        controls.style.display = 'flex';
+        renderGraph(r.nodes, r.edges);
+    });
+
+    fitBtn.addEventListener('click', () => {
+        if (graphInstance) graphInstance.fit(undefined, 50);
+    });
+
+    relayoutBtn.addEventListener('click', () => {
+        if (graphInstance) runLayout(graphInstance);
+    });
+
+    // Фильтры
+    ['filter-critical', 'filter-high', 'filter-medium', 'filter-low',
+     'filter-unknown', 'filter-kev-only', 'filter-hide-cwe'].forEach(id => {
+        document.getElementById(id).addEventListener('change', applyGraphFilters);
+    });
+}
+
+function renderGraph(nodes, edges) {
+    const container = document.getElementById('graph-container');
+    container.innerHTML = '';
+
+    if (graphInstance) {
+        graphInstance.destroy();
+        graphInstance = null;
+    }
+
+    graphInstance = cytoscape({
+        container: container,
+        elements: { nodes, edges },
+        style: getCytoscapeStyle(),
+    });
+
+    runLayout(graphInstance);
+    setupGraphInteractions(graphInstance);
+    applyGraphFilters();
+}
+
+function getCytoscapeStyle() {
+    return [
+        // Базовый стиль узлов
+        {
+            selector: 'node',
+            style: {
+                'label': 'data(label)',
+                'color': '#cdd6f4',
+                'font-size': '10px',
+                'text-outline-color': '#1e1e2e',
+                'text-outline-width': 2,
+                'text-valign': 'center',
+                'text-halign': 'center',
+                'border-width': 0,
+            },
+        },
+        // Продукты — синие квадраты
+        {
+            selector: 'node[type="product"]',
+            style: {
+                'shape': 'round-rectangle',
+                'background-color': '#89b4fa',
+                'width': 80,
+                'height': 32,
+                'color': '#1e1e2e',
+                'font-weight': 'bold',
+                'text-outline-width': 0,
+            },
+        },
+        // CWE — серые ромбы
+        {
+            selector: 'node[type="cwe"]',
+            style: {
+                'shape': 'diamond',
+                'background-color': '#6c7086',
+                'width': 40,
+                'height': 40,
+            },
+        },
+        // CVE — круги по severity
+        {
+            selector: 'node[type="cve"]',
+            style: {
+                'shape': 'ellipse',
+                'width': 24,
+                'height': 24,
+                'background-color': '#a6adc8',
+            },
+        },
+        { selector: 'node[severity="critical"]', style: { 'background-color': '#f38ba8' } },
+        { selector: 'node[severity="high"]',     style: { 'background-color': '#fab387' } },
+        { selector: 'node[severity="medium"]',   style: { 'background-color': '#f9e2af' } },
+        { selector: 'node[severity="low"]',      style: { 'background-color': '#a6e3a1' } },
+        // KEV — обводка
+        {
+            selector: 'node[type="cve"][?kev]',
+            style: {
+                'border-width': 3,
+                'border-color': '#f38ba8',
+            },
+        },
+        // Рёбра
+        {
+            selector: 'edge',
+            style: {
+                'width': 1,
+                'line-color': '#45475a',
+                'curve-style': 'bezier',
+                'target-arrow-shape': 'none',
+            },
+        },
+        {
+            selector: 'edge[type="instance-of"]',
+            style: {
+                'line-color': '#585b70',
+                'line-style': 'dashed',
+            },
+        },
+        // Состояния
+        {
+            selector: 'node:selected',
+            style: {
+                'border-width': 3,
+                'border-color': '#cba6f7',
+            },
+        },
+        {
+            selector: '.dimmed',
+            style: { 'opacity': 0.15 },
+        },
+    ];
+}
+
+function runLayout(cy) {
+    const layoutName = (typeof cytoscape.use !== 'undefined') ? 'cose-bilkent' : 'cose';
+    try {
+        cy.layout({
+            name: 'cose-bilkent',
+            animate: false,
+            randomize: true,
+            nodeRepulsion: 8000,
+            idealEdgeLength: 80,
+            edgeElasticity: 0.45,
+            gravity: 0.25,
+            numIter: 2500,
+            tile: true,
+        }).run();
+    } catch (e) {
+        // Fallback если плагин не подгрузился
+        cy.layout({ name: 'cose', animate: false }).run();
+    }
+    cy.fit(undefined, 50);
+}
+
+function setupGraphInteractions(cy) {
+    const tooltip = document.getElementById('graph-tooltip');
+
+    // Hover — tooltip
+    cy.on('mouseover', 'node', (evt) => {
+        const node = evt.target;
+        const d = node.data();
+        let html = `<strong>${escapeHtml(d.label)}</strong><br>тип: ${d.type}`;
+        if (d.type === 'cve') {
+            html += `<br>severity: ${d.severity || '—'}`;
+            if (d.cvss !== null && d.cvss !== undefined) html += ` · CVSS ${d.cvss}`;
+            if (d.kev) html += '<br><strong style="color:#f38ba8">CISA KEV</strong>';
+        } else if (d.type === 'product') {
+            if (d.vendor) html += `<br>vendor: ${d.vendor}`;
+            if (d.version) html += `<br>версия: ${d.version}`;
+            if (d.cve_count) html += `<br>CVE: ${d.cve_count}`;
+        } else if (d.type === 'cwe') {
+            if (d.cve_count) html += `<br>CVE этого типа: ${d.cve_count}`;
+        }
+        tooltip.innerHTML = html;
+        tooltip.style.display = 'block';
+    });
+
+    cy.on('mouseout', 'node', () => {
+        tooltip.style.display = 'none';
+    });
+
+    cy.on('mousemove', (evt) => {
+        if (tooltip.style.display === 'none') return;
+        const e = evt.originalEvent;
+        tooltip.style.left = (e.clientX + 14) + 'px';
+        tooltip.style.top = (e.clientY + 14) + 'px';
+    });
+
+    // Клик — открыть заметку
+    cy.on('tap', 'node', async (evt) => {
+        const d = evt.target.data();
+        if (!d.relative_path) return;
+        // Переключиться на вкладку Просмотр Vault и открыть
+        const browseTab = document.querySelector('.tab[data-tab="browse"]');
+        if (browseTab) browseTab.click();
+        await openNote(d.relative_path, null);
+        // Активируем в sidebar
+        const noteName = d.relative_path.split('/').pop().replace('.md', '');
+        document.querySelectorAll('.note-group li').forEach(li => {
+            if (li.textContent === noteName) {
+                li.classList.add('active');
+                li.scrollIntoView({block: 'nearest'});
+            }
+        });
+    });
+}
+
+function applyGraphFilters() {
+    if (!graphInstance) return;
+
+    const showCritical = document.getElementById('filter-critical').checked;
+    const showHigh = document.getElementById('filter-high').checked;
+    const showMedium = document.getElementById('filter-medium').checked;
+    const showLow = document.getElementById('filter-low').checked;
+    const showUnknown = document.getElementById('filter-unknown').checked;
+    const kevOnly = document.getElementById('filter-kev-only').checked;
+    const hideCwe = document.getElementById('filter-hide-cwe').checked;
+
+    graphInstance.batch(() => {
+        graphInstance.elements().forEach(el => {
+            const d = el.data();
+            let visible = true;
+
+            if (el.isNode()) {
+                if (d.type === 'cwe' && hideCwe) visible = false;
+                if (d.type === 'cve') {
+                    const sev = d.severity || 'unknown';
+                    if (sev === 'critical' && !showCritical) visible = false;
+                    if (sev === 'high' && !showHigh) visible = false;
+                    if (sev === 'medium' && !showMedium) visible = false;
+                    if (sev === 'low' && !showLow) visible = false;
+                    if (!['critical','high','medium','low'].includes(sev) && !showUnknown) visible = false;
+                    if (kevOnly && !d.kev) visible = false;
+                }
+            }
+            el.style('display', visible ? 'element' : 'none');
+        });
     });
 }

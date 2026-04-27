@@ -373,3 +373,174 @@
     font-size: 13px;
     flex: 1;
 }
+
+/* ===== Общие классы для всех вкладок в новом стиле ===== */
+
+#tab-scan {
+    font-family: "Inter", sans-serif;
+    color: #d3e4fe;
+    margin: -2rem;
+    margin-top: 0;
+    padding: 1.5rem 2rem 3rem;
+    background: #031427;
+    min-height: calc(100vh - 100px);
+}
+
+#tab-scan h1, #tab-scan h2, #tab-scan h3 {
+    font-family: "Manrope", sans-serif;
+}
+
+/* Scan form */
+.v-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: stretch;
+}
+
+.v-form .v-btn-primary {
+    align-self: end;
+    height: 38px;
+    padding: 0 16px;
+    white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+    .v-form { grid-template-columns: 1fr; }
+}
+
+.v-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.v-field-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #c2c6d6;
+}
+
+input.v-input,
+.v-input {
+    background: #031427 !important;
+    color: #ffffff !important;
+    border: 1px solid #424754;
+    border-radius: 0.375rem;
+    padding: 9px 12px;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    transition: border-color 0.15s;
+}
+
+input.v-input:focus,
+.v-input:focus {
+    outline: none;
+    border-color: #adc6ff;
+}
+
+input.v-input::placeholder,
+.v-input::placeholder {
+    color: #8c909f !important;
+    opacity: 1;
+}
+
+/* CVE result cards в новом стиле */
+.v-cve-card {
+    background: #102034;
+    border: 1px solid #1b2b3f;
+    border-left: 3px solid #424754;
+    border-radius: 0.375rem;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.v-cve-card:hover {
+    background: #1b2b3f;
+    border-color: #424754;
+}
+
+.v-cve-card.v-tier-critical_now {
+    border-left-color: #ffb4ab;
+    background: linear-gradient(90deg, rgba(147, 0, 10, 0.18) 0%, #102034 30%);
+}
+
+.v-cve-card.v-tier-critical_likely {
+    border-left-color: #ffb4ab;
+}
+
+.v-cve-card.v-tier-high { border-left-color: #ffb786; }
+.v-cve-card.v-tier-medium { border-left-color: #f9e2af; }
+.v-cve-card.v-tier-low { border-left-color: #a6e3a1; }
+
+.v-cve-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.v-cve-id {
+    font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #adc6ff;
+}
+
+.v-cve-meta {
+    font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+    font-size: 12px;
+    color: #c2c6d6;
+    white-space: nowrap;
+}
+
+.v-cve-tier-line {
+    font-size: 13px;
+    color: #d3e4fe;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.v-cve-desc {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #c2c6d6;
+}
+
+.v-cve-badges {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* Scan status (раньше .form, .scan-status) */
+.v-scan-status {
+    background: #0b1c30;
+    border: 1px solid #1b2b3f;
+    border-radius: 0.375rem;
+    padding: 10px 14px;
+    font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+    font-size: 13px;
+    color: #c2c6d6;
+    margin: 16px 0;
+    min-height: 1.4rem;
+}
+
+.v-scan-status.v-status-error {
+    color: #ffb4ab;
+    border-color: rgba(255, 180, 171, 0.3);
+}
+
+.v-scan-status.v-status-success {
+    color: #a6e3a1;
+}

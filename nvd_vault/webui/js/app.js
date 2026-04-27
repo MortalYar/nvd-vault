@@ -34,12 +34,12 @@ function setupScanTab() {
         const vendor = document.getElementById('vendor').value.trim();
 
         if (!product || !version) {
-            status.textContent = 'Заполни продукт и версию.';
+            setScanStatus(status, 'Заполни продукт и версию.', 'error');
             return;
         }
 
         btn.disabled = true;
-        status.textContent = `Сканирую ${product} ${version}...`;
+        setScanStatus(status, `Сканирую ${product} ${version}...`);
         results.innerHTML = '';
 
         try {
@@ -48,95 +48,73 @@ function setupScanTab() {
             );
 
             if (!result.ok) {
-                status.textContent = 'Ошибка: ' + result.error;
+                setScanStatus(status, 'Ошибка: ' + result.error, 'error');
                 return;
             }
-            status.textContent =
-                `Готово. Vendor: ${result.vendor}. Найдено ${result.matched_count} из ${result.total_in_db} CVE.`;
+            setScanStatus(
+                status,
+                `Готово. Vendor: ${result.vendor} · найдено ${result.matched_count} из ${result.total_in_db} CVE.`,
+                'success'
+            );
             renderCves(results, result.vulnerabilities);
         } catch (e) {
-            status.textContent = 'Ошибка JS: ' + e.message;
+            setScanStatus(status, 'Ошибка JS: ' + e.message, 'error');
         } finally {
             btn.disabled = false;
         }
     });
 }
 
+function setScanStatus(el, text, kind) {
+    el.textContent = text;
+    el.style.display = 'block';
+    el.className = 'v-scan-status'
+        + (kind === 'error' ? ' v-status-error'
+         : kind === 'success' ? ' v-status-success'
+         : '');
+}
+
 function renderCves(container, cves) {
     if (cves.length === 0) {
-        container.innerHTML = '<p>Уязвимости, затрагивающие версию, не найдены.</p>';
+        container.innerHTML = '<div class="v-empty">Уязвимости, затрагивающие версию, не найдены.</div>';
         return;
     }
     container.innerHTML = cves.map(cve => {
         const tier = cve.risk_tier || 'unknown';
         const tierLabel = {
-            'critical_now': '🔴 КРИТИЧНО (эксплуатируется)',
-            'critical_likely': '🔴 КРИТИЧНО (вероятная эксплуатация)',
-            'high': '🟠 Высокий',
-            'medium': '🟡 Средний',
-            'low': '🟢 Низкий',
-        }[tier] || '— Не определён';
+            'critical_now': 'КРИТИЧНО (эксплуатируется)',
+            'critical_likely': 'КРИТИЧНО (вероятная эксплуатация)',
+            'high': 'Высокий',
+            'medium': 'Средний',
+            'low': 'Низкий',
+        }[tier] || 'Не определён';
 
-        const cvssScore = cve.score !== null && cve.score !== undefined
+        const cvssScore = (cve.score !== null && cve.score !== undefined)
             ? cve.score.toFixed(1) : '—';
-        const riskScore = cve.risk_score !== null && cve.risk_score !== undefined
+        const riskScore = (cve.risk_score !== null && cve.risk_score !== undefined)
             ? cve.risk_score.toFixed(1) : '—';
 
-        const epssBadge = cve.epss_score !== null && cve.epss_score !== undefined
-            ? `<span class="epss-badge">EPSS ${cve.epss_score.toFixed(2)}</span>`
-            : '';
-        const kevBadge = cve.cisa_kev
-            ? '<span class="kev-badge">KEV</span>' : '';
-        const ransomBadge = cve.kev_known_ransomware
-            ? '<span class="ransom-badge">ransomware</span>' : '';
+        const badges = [];
+        if (cve.cisa_kev) badges.push('<span class="v-badge v-badge-critical">KEV</span>');
+        if (cve.kev_known_ransomware) badges.push('<span class="v-badge v-badge-ransomware">RANSOMWARE</span>');
+        if (cve.epss_score !== null && cve.epss_score !== undefined) {
+            badges.push(`<span class="v-badge v-badge-info">EPSS ${cve.epss_score.toFixed(2)}</span>`);
+        }
+        if (tier !== 'unknown') {
+            badges.push(`<span class="v-badge ${tierBadgeClass(tier)}">${tierLabelShort(tier)}</span>`);
+        }
 
         return `
-            <div class="cve-card tier-${tier}">
-                <div class="cve-header">
-                    <span class="cve-id">${cve.cve_id}${kevBadge}${ransomBadge}${epssBadge}</span>
-                    <span class="cve-meta">Risk ${riskScore}/10 · CVSS ${cvssScore}</span>
+            <div class="v-cve-card v-tier-${tier}">
+                <div class="v-cve-header">
+                    <span class="v-cve-id">${escapeHtml(cve.cve_id)}</span>
+                    <span class="v-cve-meta">Risk ${riskScore}/10 · CVSS ${cvssScore}</span>
                 </div>
-                <div class="cve-tier">${tierLabel}</div>
-                <div class="cve-desc">${escapeHtml(cve.description)}...</div>
-            </div>
-        `;
-    }).join('');
-}function renderCves(container, cves) {
-    if (cves.length === 0) {
-        container.innerHTML = '<p>Уязвимости, затрагивающие версию, не найдены.</p>';
-        return;
-    }
-    container.innerHTML = cves.map(cve => {
-        const tier = cve.risk_tier || 'unknown';
-        const tierLabel = {
-            'critical_now': '🔴 КРИТИЧНО (эксплуатируется)',
-            'critical_likely': '🔴 КРИТИЧНО (вероятная эксплуатация)',
-            'high': '🟠 Высокий',
-            'medium': '🟡 Средний',
-            'low': '🟢 Низкий',
-        }[tier] || '— Не определён';
-
-        const cvssScore = cve.score !== null && cve.score !== undefined
-            ? cve.score.toFixed(1) : '—';
-        const riskScore = cve.risk_score !== null && cve.risk_score !== undefined
-            ? cve.risk_score.toFixed(1) : '—';
-
-        const epssBadge = cve.epss_score !== null && cve.epss_score !== undefined
-            ? `<span class="epss-badge">EPSS ${cve.epss_score.toFixed(2)}</span>`
-            : '';
-        const kevBadge = cve.cisa_kev
-            ? '<span class="kev-badge">KEV</span>' : '';
-        const ransomBadge = cve.kev_known_ransomware
-            ? '<span class="ransom-badge">ransomware</span>' : '';
-
-        return `
-            <div class="cve-card tier-${tier}">
-                <div class="cve-header">
-                    <span class="cve-id">${cve.cve_id}${kevBadge}${ransomBadge}${epssBadge}</span>
-                    <span class="cve-meta">Risk ${riskScore}/10 · CVSS ${cvssScore}</span>
+                <div class="v-cve-tier-line">
+                    <span>${escapeHtml(tierLabel)}</span>
+                    <span class="v-cve-badges">${badges.join('')}</span>
                 </div>
-                <div class="cve-tier">${tierLabel}</div>
-                <div class="cve-desc">${escapeHtml(cve.description)}...</div>
+                <div class="v-cve-desc">${escapeHtml(cve.description)}...</div>
             </div>
         `;
     }).join('');

@@ -152,13 +152,40 @@
         </section>
 
         <section id="tab-scan" class="tab-content active">
-            <div class="form">
-                <label>Продукт: <input type="text" id="product" value="kibana"></label>
-                <label>Версия: <input type="text" id="version" value="8.19.9"></label>
-                <label>Vendor: <input type="text" id="vendor" value="elastic"></label>
-                <button id="scan-btn">Сканировать</button>
+            <div class="v-page-header">
+                <div>
+                    <h1>Быстрое сканирование</h1>
+                    <p class="v-page-subtitle">
+                        Точечная проверка одного продукта без сохранения. Введи имя, версию и
+                        опционально vendor — приложение опросит NVD, EPSS и CISA KEV,
+                        вернёт уязвимости по приоритету риска.
+                    </p>
+                </div>
             </div>
-            <div id="scan-status"></div>
+
+            <div class="v-section">
+                <div class="v-form">
+                    <div class="v-field">
+                        <label class="v-field-label" for="product">Продукт</label>
+                        <input type="text" class="v-input" id="product" value="kibana" placeholder="напр. kibana">
+                    </div>
+                    <div class="v-field">
+                        <label class="v-field-label" for="version">Версия</label>
+                        <input type="text" class="v-input" id="version" value="8.19.9" placeholder="8.19.9">
+                    </div>
+                    <div class="v-field">
+                        <label class="v-field-label" for="vendor">Vendor</label>
+                        <input type="text" class="v-input" id="vendor" value="elastic" placeholder="опционально">
+                    </div>
+                    <button id="scan-btn" class="v-btn-primary">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">search</span>
+                        Сканировать
+                    </button>
+                </div>
+            </div>
+
+            <div id="scan-status" class="v-scan-status" style="display: none;"></div>
+
             <div id="scan-results"></div>
         </section>
 

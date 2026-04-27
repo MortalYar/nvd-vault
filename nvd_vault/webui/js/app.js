@@ -992,9 +992,38 @@ function getCytoscapeStyle() {
                 'border-color': '#cba6f7',
             },
         },
+        // Подсветка/затемнение
         {
             selector: '.dimmed',
-            style: { 'opacity': 0.15 },
+            style: {
+                'opacity': 0.15,
+                'text-opacity': 0.15,
+            },
+        },
+        {
+            selector: '.highlighted',
+            style: {
+                'border-width': 3,
+                'border-color': '#cba6f7',
+                'z-index': 10,
+            },
+        },
+        {
+            selector: 'edge.highlighted',
+            style: {
+                'width': 2.5,
+                'line-color': '#cba6f7',
+                'z-index': 10,
+                'opacity': 1,
+            },
+        },
+        {
+            selector: 'node.focused',
+            style: {
+                'border-width': 4,
+                'border-color': '#f9e2af',
+                'z-index': 20,
+            },
         },
     ];
 }
@@ -1054,15 +1083,19 @@ function setupGraphInteractions(cy) {
         tooltip.style.top = (e.clientY + 14) + 'px';
     });
 
-    // Клик — открыть заметку
-    cy.on('tap', 'node', async (evt) => {
+    // Одиночный клик — highlight соседей
+    cy.on('tap', 'node', (evt) => {
+        const node = evt.target;
+        highlightNeighborhood(cy, node);
+    });
+
+    // Двойной клик — переход к заметке
+    cy.on('dbltap', 'node', async (evt) => {
         const d = evt.target.data();
         if (!d.relative_path) return;
-        // Переключиться на вкладку Просмотр Vault и открыть
         const browseTab = document.querySelector('.tab[data-tab="browse"]');
         if (browseTab) browseTab.click();
         await openNote(d.relative_path, null);
-        // Активируем в sidebar
         const noteName = d.relative_path.split('/').pop().replace('.md', '');
         document.querySelectorAll('.note-group li').forEach(li => {
             if (li.textContent === noteName) {
@@ -1070,6 +1103,13 @@ function setupGraphInteractions(cy) {
                 li.scrollIntoView({block: 'nearest'});
             }
         });
+    });
+
+    // Клик по пустому месту — снять подсветку
+    cy.on('tap', (evt) => {
+        if (evt.target === cy) {
+            clearHighlight(cy);
+        }
     });
 }
 
@@ -1104,6 +1144,30 @@ function applyGraphFilters() {
             el.style('display', visible ? 'element' : 'none');
         });
     });
+    // Сбрасываем highlight при изменении фильтров
+    clearHighlight(graphInstance);
+}
+
+function highlightNeighborhood(cy, node) {
+    // Снимаем предыдущую подсветку
+    cy.elements().removeClass('highlighted focused dimmed');
+
+    // Соседи: связанные узлы + рёбра между ними
+    const neighborhood = node.closedNeighborhood();
+
+    // Затемняем всё остальное
+    cy.elements().not(neighborhood).addClass('dimmed');
+
+    // Подсвечиваем соседей
+    neighborhood.addClass('highlighted');
+
+    // Целевой узел отмечаем особо
+    node.removeClass('highlighted');
+    node.addClass('focused');
+}
+
+function clearHighlight(cy) {
+    cy.elements().removeClass('highlighted focused dimmed');
 }
 
 // ---------- Tab: дашборд ----------

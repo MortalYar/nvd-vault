@@ -795,3 +795,10 @@ button:disabled { background: #45475a; cursor: not-allowed; }
 .build-form {
     margin-bottom: 1rem;
 }
+
+.graph-hint {
+    color: #6c7086;
+    font-size: 0.78rem;
+    margin-left: auto;
+    font-style: italic;
+}

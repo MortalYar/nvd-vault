@@ -305,3 +305,39 @@ button:disabled { background: #45475a; cursor: not-allowed; }
 .graph-tooltip strong {
     color: #89b4fa;
 }
+
+/* Risk tiers */
+.cve-card.tier-critical_now    { border-left-color: #f38ba8; background: #38202a; }
+.cve-card.tier-critical_likely { border-left-color: #f38ba8; }
+.cve-card.tier-high            { border-left-color: #fab387; }
+.cve-card.tier-medium          { border-left-color: #f9e2af; }
+.cve-card.tier-low             { border-left-color: #a6e3a1; }
+.cve-card.tier-unknown         { border-left-color: #45475a; }
+
+.cve-tier {
+    font-size: 0.85rem;
+    color: #cdd6f4;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.epss-badge {
+    background: #cba6f7;
+    color: #1e1e2e;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    font-weight: 600;
+    margin-left: 0.5rem;
+    font-family: "Consolas", monospace;
+}
+
+.ransom-badge {
+    background: #f38ba8;
+    color: #1e1e2e;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}

@@ -12,6 +12,7 @@ from typing import Optional
 
 import webview
 
+from nvd_vault.core.enrichment import EnrichmentClient, compute_risk_score
 from nvd_vault.core.graph_builder import build_graph
 from nvd_vault.core.search_index import SearchIndex
 from nvd_vault.core.inventory import load_inventory
@@ -74,6 +75,42 @@ class Api:
             all_vulns = client.fetch_cves(vendor, product)
             matched = [v for v in all_vulns if cpe_matches_version(v, product, version)]
 
+            # Обогащение matched-результатов EPSS и KEV
+            if matched:
+                enricher = EnrichmentClient()
+                cve_ids = [v.cve_id for v in matched]
+                epss_data = enricher.fetch_epss_batch(cve_ids)
+                kev_data = enricher.fetch_kev_catalog()
+
+                for v in matched:
+                    if v.cve_id in epss_data:
+                        e = epss_data[v.cve_id]
+                        v.epss_score = e["epss_score"]
+                        v.epss_percentile = e["epss_percentile"]
+                    if v.cve_id in kev_data:
+                        k = kev_data[v.cve_id]
+                        v.cisa_kev = True
+                        v.kev_known_ransomware = k["kev_known_ransomware"]
+
+                    risk = compute_risk_score(
+                        cvss_score=v.cvss_score,
+                        epss_score=v.epss_score,
+                        is_kev=v.cisa_kev,
+                        kev_known_ransomware=v.kev_known_ransomware,
+                    )
+                    v.risk_score = risk["score"]
+                    v.risk_tier = risk["tier"]
+
+                # Сортировка: critical_now → critical_likely → high → medium → low
+                tier_order = {
+                    "critical_now": 0, "critical_likely": 1,
+                    "high": 2, "medium": 3, "low": 4
+                }
+                matched.sort(key=lambda v: (
+                    tier_order.get(v.risk_tier or "low", 99),
+                    -(v.risk_score or 0),
+                ))
+
             return {
                 "ok": True,
                 "product": product,
@@ -89,6 +126,11 @@ class Api:
                         "description": v.description_en[:300],
                         "published": v.published,
                         "cisa_kev": v.cisa_kev,
+                        "epss_score": v.epss_score,
+                        "epss_percentile": v.epss_percentile,
+                        "risk_score": v.risk_score,
+                        "risk_tier": v.risk_tier,
+                        "kev_known_ransomware": v.kev_known_ransomware,
                     }
                     for v in matched
                 ],

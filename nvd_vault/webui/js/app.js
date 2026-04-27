@@ -67,15 +67,74 @@ function renderCves(container, cves) {
         return;
     }
     container.innerHTML = cves.map(cve => {
-        const sevClass = (cve.severity || '').toLowerCase();
-        const score = cve.score !== null ? cve.score.toFixed(1) : '—';
-        const kevBadge = cve.cisa_kev ? '<span class="kev-badge">KEV</span>' : '';
+        const tier = cve.risk_tier || 'unknown';
+        const tierLabel = {
+            'critical_now': '🔴 КРИТИЧНО (эксплуатируется)',
+            'critical_likely': '🔴 КРИТИЧНО (вероятная эксплуатация)',
+            'high': '🟠 Высокий',
+            'medium': '🟡 Средний',
+            'low': '🟢 Низкий',
+        }[tier] || '— Не определён';
+
+        const cvssScore = cve.score !== null && cve.score !== undefined
+            ? cve.score.toFixed(1) : '—';
+        const riskScore = cve.risk_score !== null && cve.risk_score !== undefined
+            ? cve.risk_score.toFixed(1) : '—';
+
+        const epssBadge = cve.epss_score !== null && cve.epss_score !== undefined
+            ? `<span class="epss-badge">EPSS ${cve.epss_score.toFixed(2)}</span>`
+            : '';
+        const kevBadge = cve.cisa_kev
+            ? '<span class="kev-badge">KEV</span>' : '';
+        const ransomBadge = cve.kev_known_ransomware
+            ? '<span class="ransom-badge">ransomware</span>' : '';
+
         return `
-            <div class="cve-card ${sevClass}">
+            <div class="cve-card tier-${tier}">
                 <div class="cve-header">
-                    <span class="cve-id">${cve.cve_id}${kevBadge}</span>
-                    <span class="cve-meta">${cve.severity || 'N/A'} · CVSS ${score}</span>
+                    <span class="cve-id">${cve.cve_id}${kevBadge}${ransomBadge}${epssBadge}</span>
+                    <span class="cve-meta">Risk ${riskScore}/10 · CVSS ${cvssScore}</span>
                 </div>
+                <div class="cve-tier">${tierLabel}</div>
+                <div class="cve-desc">${escapeHtml(cve.description)}...</div>
+            </div>
+        `;
+    }).join('');
+}function renderCves(container, cves) {
+    if (cves.length === 0) {
+        container.innerHTML = '<p>Уязвимости, затрагивающие версию, не найдены.</p>';
+        return;
+    }
+    container.innerHTML = cves.map(cve => {
+        const tier = cve.risk_tier || 'unknown';
+        const tierLabel = {
+            'critical_now': '🔴 КРИТИЧНО (эксплуатируется)',
+            'critical_likely': '🔴 КРИТИЧНО (вероятная эксплуатация)',
+            'high': '🟠 Высокий',
+            'medium': '🟡 Средний',
+            'low': '🟢 Низкий',
+        }[tier] || '— Не определён';
+
+        const cvssScore = cve.score !== null && cve.score !== undefined
+            ? cve.score.toFixed(1) : '—';
+        const riskScore = cve.risk_score !== null && cve.risk_score !== undefined
+            ? cve.risk_score.toFixed(1) : '—';
+
+        const epssBadge = cve.epss_score !== null && cve.epss_score !== undefined
+            ? `<span class="epss-badge">EPSS ${cve.epss_score.toFixed(2)}</span>`
+            : '';
+        const kevBadge = cve.cisa_kev
+            ? '<span class="kev-badge">KEV</span>' : '';
+        const ransomBadge = cve.kev_known_ransomware
+            ? '<span class="ransom-badge">ransomware</span>' : '';
+
+        return `
+            <div class="cve-card tier-${tier}">
+                <div class="cve-header">
+                    <span class="cve-id">${cve.cve_id}${kevBadge}${ransomBadge}${epssBadge}</span>
+                    <span class="cve-meta">Risk ${riskScore}/10 · CVSS ${cvssScore}</span>
+                </div>
+                <div class="cve-tier">${tierLabel}</div>
                 <div class="cve-desc">${escapeHtml(cve.description)}...</div>
             </div>
         `;

@@ -26,10 +26,29 @@ def render_cve_note(vuln: Vulnerability, products_for_cve: list[str]) -> str:
     lines.append(f"cwes: [{', '.join(vuln.weaknesses)}]")
     lines.append(f"kev: {str(vuln.cisa_kev).lower()}")
 
+     # EPSS
+    if vuln.epss_score is not None:
+        lines.append(f"epss: {vuln.epss_score:.4f}")
+        lines.append(f"epss_percentile: {vuln.epss_percentile:.4f}")
+
+    # Risk
+    if vuln.risk_tier:
+        lines.append(f"risk_tier: {vuln.risk_tier}")
+        lines.append(f"risk_score: {vuln.risk_score:.2f}")
+
+    if vuln.kev_known_ransomware:
+        lines.append("ransomware: true")
+
     # Теги для фильтрации
     tags = [severity]
     if vuln.cisa_kev:
         tags.append("kev")
+    if vuln.kev_known_ransomware:
+        tags.append("ransomware")
+    if vuln.risk_tier:
+        tags.append(vuln.risk_tier)
+    if vuln.epss_score and vuln.epss_score >= 0.7:
+        tags.append("high-epss")
     lines.append(f"tags: [{', '.join(tags)}]")
     lines.append("---")
     lines.append("")
@@ -37,12 +56,52 @@ def render_cve_note(vuln: Vulnerability, products_for_cve: list[str]) -> str:
     # Заголовок и сводка
     lines.append(f"# {vuln.cve_id}")
     lines.append("")
+
+    # Risk-блок (приоритетный)
+    if vuln.risk_tier:
+        tier_label = {
+            "critical_now": "🔴 КРИТИЧНО (эксплуатируется)",
+            "critical_likely": "🔴 КРИТИЧНО (вероятная эксплуатация)",
+            "high": "🟠 Высокий",
+            "medium": "🟡 Средний",
+            "low": "🟢 Низкий",
+        }.get(vuln.risk_tier, vuln.risk_tier)
+
+        lines.append(f"**Приоритет:** {tier_label} · "
+                     f"**Risk Score:** {vuln.risk_score:.1f}/10")
+        lines.append("")
+
     lines.append(f"**Severity:** {vuln.cvss_severity or '—'} · "
                  f"**CVSS:** {score}")
-    if vuln.cisa_kev:
-        lines.append("")
-        lines.append("> ⚠ Активно эксплуатируется (CISA KEV)")
+
+    if vuln.epss_score is not None:
+        epss_pct = (vuln.epss_percentile or 0) * 100
+        lines.append(f"**EPSS:** {vuln.epss_score:.4f} "
+                     f"(топ {100 - epss_pct:.1f}% самых вероятных к эксплуатации)")
+
     lines.append("")
+
+    # KEV блок
+    if vuln.cisa_kev:
+        kev_lines = ["> ⚠ **CISA KEV** — активно эксплуатируется в реальных атаках"]
+        if vuln.kev_added:
+            kev_lines.append(f"> Добавлено в KEV: {vuln.kev_added}")
+        if vuln.kev_due:
+            kev_lines.append(f"> Дедлайн патча: {vuln.kev_due}")
+        if vuln.kev_known_ransomware:
+            kev_lines.append("> 🔒 **Известно использование в ransomware**")
+        if vuln.kev_action:
+            kev_lines.append(f"> Действие: {vuln.kev_action}")
+        for line in kev_lines:
+            lines.append(line)
+        lines.append("")
+
+    # Reasoning -- почему такой tier
+    if vuln.risk_reasoning:
+        lines.append("**Обоснование приоритета:**")
+        for reason in vuln.risk_reasoning:
+            lines.append(f"- {reason}")
+        lines.append("")
 
     # Затронутые продукты — wiki-links
     if products_for_cve:

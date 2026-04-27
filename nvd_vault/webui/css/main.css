@@ -1,6 +1,5 @@
 * {
     margin: 0;
-    padding: 0;
     box-sizing: border-box;
 }
 
@@ -149,6 +148,33 @@ button:disabled { background: #45475a; cursor: not-allowed; }
     border-radius: 3px;
     font-weight: 600;
     margin-left: 0.5rem;
+}
+
+.vault-browser {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 0;
+    height: calc(100vh - 220px);
+    min-height: 500px;
+    background: #313244;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.sidebar {
+    background: #313244;
+    padding: 2rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    border-right: 1px solid #45475a;
+}
+
+.note-view {
+    background: #313244;
+    padding: 1.5rem 2rem;
+    overflow-y: auto;
 }
 
 /* Search */

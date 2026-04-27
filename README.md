@@ -71,6 +71,7 @@ python app.py
 
 Выбери файл inventory и папку, в которой создать vault, нажми «Собрать Vault». Приложение опросит NVD по каждому продукту и создаст структуру связанных Markdown-заметок:
 
+```
 my-vault/
 ├── meta.json
 ├── cves/
@@ -80,8 +81,9 @@ my-vault/
 │   ├── kibana.md
 │   └── logstash.md
 └── cwes/
-├── CWE-287.md
-└── ...
+    ├── CWE-287.md
+    └── ...
+```
 
 Каждая CVE-заметка содержит YAML frontmatter с метаданными (severity, CVSS, KEV-статус, теги) и тело с описанием, ссылками на patches и wiki-ссылками `[[product]]` и `[[CWE-...]]` на связанные документы.
 

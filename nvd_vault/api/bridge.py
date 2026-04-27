@@ -410,6 +410,46 @@ class Api:
             return {"ok": False, "error": "Файл не выбран"}
         path = result if isinstance(result, str) else result[0]
         return {"ok": True, "path": path}
+    
+    def select_export_png_path(self, default_name: str = "graph.png") -> dict:
+        """Диалог сохранения для PNG-экспорта графа."""
+        result = webview.windows[0].create_file_dialog(
+            webview.SAVE_DIALOG,
+            save_filename=default_name,
+            file_types=("PNG image (*.png)", "All files (*.*)"),
+        )
+        if not result:
+            return {"ok": False, "error": "Файл не выбран"}
+        path = result if isinstance(result, str) else result[0]
+        return {"ok": True, "path": path}
+
+    def save_graph_png(self, png_path: str, data_uri: str) -> dict:
+        """Сохранить PNG-картинку графа на диск из Data URI."""
+        import base64
+
+        try:
+            # Data URI формата "data:image/png;base64,iVBORw0KG..."
+            if "," not in data_uri:
+                return {"ok": False, "error": "Некорректный формат картинки"}
+
+            header, encoded = data_uri.split(",", 1)
+            if "base64" not in header:
+                return {"ok": False, "error": "Ожидается base64-encoded PNG"}
+
+            png_bytes = base64.b64decode(encoded)
+
+            target = Path(png_path)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(png_bytes)
+
+            size_kb = target.stat().st_size / 1024
+            return {
+                "ok": True,
+                "path": str(target),
+                "size_kb": round(size_kb, 1),
+            }
+        except Exception as e:
+            return {"ok": False, "error": f"Ошибка сохранения: {e}"}
 
     def export_vault_zip(self, zip_path: str) -> dict:
         """Запаковать текущий открытый vault в ZIP."""

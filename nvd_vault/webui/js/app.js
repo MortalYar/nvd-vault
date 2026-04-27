@@ -895,6 +895,42 @@ function setupGraphTab() {
         if (graphInstance) runLayout(graphInstance);
     });
 
+    const exportPngBtn = document.getElementById('graph-export-png');
+    exportPngBtn.addEventListener('click', async () => {
+        if (!graphInstance) return;
+
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const defaultName = `vault-graph_${dateStr}.png`;
+
+        const dlg = await window.pywebview.api.select_export_png_path(defaultName);
+        if (!dlg.ok) return;
+
+        exportPngBtn.disabled = true;
+        exportPngBtn.textContent = 'Сохраняю...';
+
+        // Снимаем подсветку перед экспортом — иначе она попадёт на картинку
+        clearHighlight(graphInstance);
+
+        // cy.png() возвращает data URI
+        // Параметры: bg — фон, scale — кратность размера для retina-качества
+        const dataUri = graphInstance.png({
+            bg: '#1e1e2e',
+            scale: 2,
+            full: true,        // экспортируем весь граф, не только видимое
+        });
+
+        const r = await window.pywebview.api.save_graph_png(dlg.path, dataUri);
+
+        exportPngBtn.disabled = false;
+        exportPngBtn.textContent = 'Экспорт PNG';
+
+        if (!r.ok) {
+            alert('Ошибка: ' + r.error);
+            return;
+        }
+        alert(`Готово!\n\nФайл: ${r.path}\nРазмер: ${r.size_kb} КБ`);
+    });
+
     // Фильтры
     ['filter-critical', 'filter-high', 'filter-medium', 'filter-low',
      'filter-unknown', 'filter-kev-only', 'filter-hide-cwe'].forEach(id => {

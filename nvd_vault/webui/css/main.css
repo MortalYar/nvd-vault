@@ -603,3 +603,195 @@ button:disabled { background: #45475a; cursor: not-allowed; }
 .cve-filter:hover {
     color: #cdd6f4;
 }
+
+/* Inventory editor */
+.inventory-editor {
+    background: #313244;
+    border-radius: 6px;
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.editor-header h2 {
+    color: #89b4fa;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+.editor-actions {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.btn-secondary {
+    background: #45475a;
+    color: #cdd6f4;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.btn-secondary:hover {
+    background: #585b70;
+}
+
+.btn-secondary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-danger {
+    background: transparent;
+    color: #f38ba8;
+    border: 1px solid #45475a;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.btn-danger:hover {
+    background: rgba(243, 139, 168, 0.15);
+    border-color: #f38ba8;
+}
+
+.inventory-meta {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.inventory-meta label {
+    flex: 1;
+}
+
+.inventory-meta input {
+    width: 100%;
+}
+
+.path-display {
+    color: #6c7086;
+    font-size: 0.78rem;
+    font-family: "Consolas", monospace;
+    padding-bottom: 0.5rem;
+}
+
+.products-table-wrapper {
+    background: #1e1e2e;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.6rem;
+}
+
+.products-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.products-table thead {
+    background: #181825;
+}
+
+.products-table th {
+    text-align: left;
+    padding: 0.5rem 0.7rem;
+    color: #a6adc8;
+    font-weight: 500;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.products-table td {
+    padding: 0.4rem 0.5rem;
+    border-top: 1px solid #313244;
+}
+
+.products-table input[type="text"] {
+    background: transparent;
+    color: #cdd6f4;
+    border: 1px solid transparent;
+    padding: 0.3rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.88rem;
+    width: 100%;
+}
+
+.products-table input[type="text"]:focus {
+    background: #313244;
+    border-color: #89b4fa;
+    outline: none;
+}
+
+.products-table .vendor-cell {
+    display: flex;
+    gap: 0.3rem;
+    align-items: stretch;
+}
+
+.products-table .vendor-cell input {
+    flex: 1;
+}
+
+.btn-discover {
+    background: #45475a;
+    color: #cdd6f4;
+    border: none;
+    padding: 0 0.5rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-discover:hover {
+    background: #585b70;
+}
+
+.btn-discover:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.products-table .row-actions {
+    width: 80px;
+    text-align: right;
+}
+
+.empty-row td {
+    text-align: center;
+    color: #6c7086;
+    font-style: italic;
+    padding: 1.5rem !important;
+}
+
+.add-product-btn {
+    margin-bottom: 1rem;
+}
+
+.inv-status {
+    font-size: 0.85rem;
+    padding: 0.4rem 0;
+    color: #a6adc8;
+    min-height: 1.2rem;
+}
+
+.inv-status.success { color: #a6e3a1; }
+.inv-status.error { color: #f38ba8; }
+
+.build-form {
+    margin-bottom: 1rem;
+}

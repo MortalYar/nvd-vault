@@ -55,6 +55,87 @@ class Api:
             return {"ok": False, "error": "Файл не выбран"}
         return {"ok": True, "path": result[0]}
 
+    def save_inventory_dialog(self, default_name: str = "inventory.json") -> dict:
+        """Диалог сохранения для inventory.json."""
+        result = webview.windows[0].create_file_dialog(
+            webview.SAVE_DIALOG,
+            save_filename=default_name,
+            file_types=("JSON files (*.json)", "All files (*.*)"),
+        )
+        if not result:
+            return {"ok": False, "error": "Файл не выбран"}
+        path = result if isinstance(result, str) else result[0]
+        return {"ok": True, "path": path}
+
+    def read_inventory(self, path: str) -> dict:
+        """Прочитать inventory.json и вернуть его содержимое."""
+        try:
+            inventory_path = Path(path)
+            if not inventory_path.exists():
+                return {"ok": False, "error": "Файл не существует"}
+
+            data = json.loads(inventory_path.read_text(encoding="utf-8"))
+
+            # Валидация структуры
+            if "products" not in data or not isinstance(data["products"], list):
+                return {"ok": False, "error": "Некорректный inventory.json (нет массива products)"}
+
+            return {
+                "ok": True,
+                "vault_name": data.get("vault_name", ""),
+                "products": data["products"],
+            }
+        except json.JSONDecodeError as e:
+            return {"ok": False, "error": f"Ошибка JSON: {e}"}
+        except Exception as e:
+            return {"ok": False, "error": f"Не удалось прочитать: {e}"}
+
+    def write_inventory(self, path: str, vault_name: str,
+                        products: list) -> dict:
+        """Записать inventory.json на диск."""
+        try:
+            inventory_path = Path(path)
+
+            # Минимальная валидация
+            if not isinstance(products, list):
+                return {"ok": False, "error": "products должен быть списком"}
+            for i, item in enumerate(products):
+                if not isinstance(item, dict):
+                    return {"ok": False, "error": f"products[{i}] должен быть объектом"}
+                if not item.get("name") or not item.get("version"):
+                    return {
+                        "ok": False,
+                        "error": f"products[{i}]: обязательны поля 'name' и 'version'",
+                    }
+
+            data = {
+                "vault_name": vault_name or "Untitled Vault",
+                "products": products,
+            }
+
+            inventory_path.parent.mkdir(parents=True, exist_ok=True)
+            inventory_path.write_text(
+                json.dumps(data, indent=2, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            return {"ok": True, "path": str(inventory_path)}
+        except Exception as e:
+            return {"ok": False, "error": f"Не удалось сохранить: {e}"}
+
+    def discover_vendor(self, product: str) -> dict:
+        """Найти возможные vendor'ы для продукта через NVD."""
+        if not product or not product.strip():
+            return {"ok": False, "error": "Имя продукта пустое"}
+
+        try:
+            client = NvdClient()
+            vendors = client.discover_vendors(product.strip())
+            return {"ok": True, "vendors": vendors[:10]}
+        except RuntimeError as e:
+            return {"ok": False, "error": str(e)}
+        except Exception as e:
+            return {"ok": False, "error": f"Неожиданная ошибка: {e}"}
+
     def select_vault_folder(self) -> dict:
         result = webview.windows[0].create_file_dialog(webview.FOLDER_DIALOG)
         if not result:

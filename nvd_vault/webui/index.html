@@ -83,14 +83,48 @@
         </section>
 
         <section id="tab-vault" class="tab-content">
-            <div class="form">
-                <label>
-                    Inventory.json:
-                    <div class="file-row">
-                        <input type="text" id="inventory-path" readonly placeholder="не выбран">
-                        <button id="pick-inventory">Выбрать...</button>
+            <!-- Inventory editor -->
+            <div class="inventory-editor">
+                <div class="editor-header">
+                    <h2>Inventory</h2>
+                    <div class="editor-actions">
+                        <button id="inv-new-btn" class="btn-secondary">Новый</button>
+                        <button id="inv-open-btn" class="btn-secondary">Открыть...</button>
+                        <button id="inv-save-btn" class="btn-secondary" disabled>Сохранить</button>
+                        <button id="inv-save-as-btn" class="btn-secondary" disabled>Сохранить как...</button>
                     </div>
-                </label>
+                </div>
+
+                <div class="inventory-meta">
+                    <label>
+                        Имя vault:
+                        <input type="text" id="inv-vault-name" placeholder="например, ELK Stack Production">
+                    </label>
+                    <span id="inv-current-path" class="path-display"></span>
+                </div>
+
+                <div class="products-table-wrapper">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>Продукт</th>
+                                <th>Версия</th>
+                                <th>Vendor</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-tbody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <button id="inv-add-product" class="btn-secondary add-product-btn">+ Добавить продукт</button>
+
+                <div id="inv-status" class="inv-status"></div>
+            </div>
+
+            <!-- Build section -->
+            <div class="form build-form">
                 <label>
                     Папка для vault:
                     <div class="file-row">
@@ -98,6 +132,7 @@
                         <button id="pick-vault">Выбрать...</button>
                     </div>
                 </label>
+                <input type="hidden" id="inventory-path">
                 <button id="build-btn" disabled>Собрать Vault</button>
             </div>
             <div id="build-log"></div>

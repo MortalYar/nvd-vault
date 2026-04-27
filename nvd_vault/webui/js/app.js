@@ -275,6 +275,26 @@ function setupBrowseTab() {
         });
     });
 
+    // Sort и filter для CVE
+    const cveSort = document.getElementById('cve-sort');
+    const cveFilterKev = document.getElementById('cve-filter-kev');
+    const cveFilterCritical = document.getElementById('cve-filter-critical');
+    const cveFilterRansom = document.getElementById('cve-filter-ransom');
+
+    [cveSort, cveFilterKev, cveFilterCritical, cveFilterRansom].forEach(el => {
+        el.addEventListener('change', () => {
+            renderCveList();
+            // Применяем также текстовый фильтр заново
+            const q = filterInput.value.toLowerCase();
+            if (q) {
+                document.querySelectorAll('.note-group li').forEach(li => {
+                    const visible = li.textContent.toLowerCase().includes(q);
+                    li.style.display = visible ? '' : 'none';
+                });
+            }
+        });
+    });
+
     // ---- Поиск ----
     let searchTimeout = null;
 
@@ -364,6 +384,9 @@ function setupBrowseTab() {
     }
 }
 
+// Глобальное хранилище CVE для пересортировки на лету
+let allCvesCache = [];
+
 async function loadNotesList() {
     const r = await window.pywebview.api.list_vault_notes();
     if (!r.ok) {
@@ -372,8 +395,93 @@ async function loadNotesList() {
     }
 
     fillList('list-products', r.notes.products);
-    fillList('list-cves', r.notes.cves);
+    allCvesCache = r.notes.cves;
+    renderCveList();
     fillList('list-cwes', r.notes.cwes);
+}
+
+function renderCveList() {
+    const sortMode = document.getElementById('cve-sort').value;
+    const filterKev = document.getElementById('cve-filter-kev').checked;
+    const filterCritical = document.getElementById('cve-filter-critical').checked;
+    const filterRansom = document.getElementById('cve-filter-ransom').checked;
+
+    // 1. Фильтрация
+    let filtered = allCvesCache.filter(note => {
+        const fm = note.frontmatter || {};
+        if (filterKev && !toBool(fm.kev)) return false;
+        if (filterCritical) {
+            const tier = fm.risk_tier || '';
+            if (tier !== 'critical_now' && tier !== 'critical_likely') return false;
+        }
+        if (filterRansom && !toBool(fm.ransomware)) return false;
+        return true;
+    });
+
+    // 2. Сортировка
+    filtered = sortCves(filtered, sortMode);
+
+    // 3. Рендер
+    fillList('list-cves', filtered);
+
+    // 4. Счётчик
+    const counter = document.getElementById('cve-counter');
+    counter.textContent = filtered.length === allCvesCache.length
+        ? `${filtered.length}`
+        : `${filtered.length} из ${allCvesCache.length}`;
+}
+
+function sortCves(notes, mode) {
+    const tierOrder = {
+        'critical_now': 0, 'critical_likely': 1,
+        'high': 2, 'medium': 3, 'low': 4, 'unknown': 5,
+    };
+
+    const arr = [...notes];
+
+    switch (mode) {
+        case 'risk':
+            arr.sort((a, b) => {
+                const ta = tierOrder[a.frontmatter?.risk_tier || 'unknown'] ?? 99;
+                const tb = tierOrder[b.frontmatter?.risk_tier || 'unknown'] ?? 99;
+                if (ta !== tb) return ta - tb;
+                const ra = parseFloat(a.frontmatter?.risk_score || 0);
+                const rb = parseFloat(b.frontmatter?.risk_score || 0);
+                return rb - ra;
+            });
+            break;
+        case 'cvss':
+            arr.sort((a, b) => {
+                const va = parseFloat(a.frontmatter?.cvss || 0);
+                const vb = parseFloat(b.frontmatter?.cvss || 0);
+                return vb - va;
+            });
+            break;
+        case 'epss':
+            arr.sort((a, b) => {
+                const va = parseFloat(a.frontmatter?.epss || 0);
+                const vb = parseFloat(b.frontmatter?.epss || 0);
+                return vb - va;
+            });
+            break;
+        case 'published':
+            arr.sort((a, b) => {
+                const va = a.frontmatter?.published || '';
+                const vb = b.frontmatter?.published || '';
+                return vb.localeCompare(va);
+            });
+            break;
+        case 'name':
+        default:
+            arr.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return arr;
+}
+
+function toBool(value) {
+    if (typeof value === 'boolean') return value;
+    return String(value).toLowerCase() === 'true';
 }
 
 function fillList(elementId, notes) {

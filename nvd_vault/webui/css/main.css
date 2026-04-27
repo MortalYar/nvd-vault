@@ -534,3 +534,72 @@ button:disabled { background: #45475a; cursor: not-allowed; }
 .deadline-soon {
     color: #fab387;
 }
+
+/* CVE sort/filter controls in sidebar */
+.cve-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+}
+
+.cve-group-header h3 {
+    margin: 0;
+}
+
+.cve-counter {
+    color: #6c7086;
+    font-size: 0.75rem;
+    font-family: "Consolas", monospace;
+}
+
+.cve-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid #45475a;
+}
+
+.sort-select {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border: 1px solid #45475a;
+    padding: 0.35rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    width: 100%;
+    cursor: pointer;
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: #89b4fa;
+}
+
+.cve-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.6rem;
+}
+
+.cve-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+    font-size: 0.78rem;
+    color: #a6adc8;
+    user-select: none;
+}
+
+.cve-filter input[type="checkbox"] {
+    cursor: pointer;
+    width: auto;
+    margin: 0;
+}
+
+.cve-filter:hover {
+    color: #cdd6f4;
+}

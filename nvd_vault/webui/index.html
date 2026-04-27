@@ -120,15 +120,43 @@
 
             <div class="vault-browser" id="vault-browser" style="display:none;">
                 <aside class="sidebar">
-                    <input type="text" id="filter-input" placeholder="Фильтр...">
+                    <input type="text" id="filter-input" placeholder="Фильтр по имени...">
                     <div class="note-group">
                         <h3>Продукты</h3>
                         <ul id="list-products"></ul>
                     </div>
+
                     <div class="note-group">
-                        <h3>CVE</h3>
+                        <div class="cve-group-header">
+                            <h3>CVE</h3>
+                            <span id="cve-counter" class="cve-counter"></span>
+                        </div>
+
+                        <div class="cve-controls">
+                            <select id="cve-sort" class="sort-select">
+                                <option value="risk">По риску ↓</option>
+                                <option value="cvss">По CVSS ↓</option>
+                                <option value="epss">По EPSS ↓</option>
+                                <option value="published">По дате ↓</option>
+                                <option value="name">По имени</option>
+                            </select>
+
+                            <div class="cve-filters">
+                                <label class="cve-filter">
+                                    <input type="checkbox" id="cve-filter-kev"> KEV
+                                </label>
+                                <label class="cve-filter">
+                                    <input type="checkbox" id="cve-filter-critical"> Critical
+                                </label>
+                                <label class="cve-filter">
+                                    <input type="checkbox" id="cve-filter-ransom"> Ransomware
+                                </label>
+                            </div>
+                        </div>
+
                         <ul id="list-cves"></ul>
                     </div>
+
                     <div class="note-group">
                         <h3>CWE</h3>
                         <ul id="list-cwes"></ul>

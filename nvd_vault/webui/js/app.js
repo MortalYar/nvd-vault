@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupVaultTab();
     setupBrowseTab();
     setupGraphTab();
+    setupDashboardTab();
 });
 
 // ---------- Табы ----------
@@ -234,6 +235,7 @@ function setupBrowseTab() {
         exportBtn.disabled = false;
 
         await loadNotesList();
+        await loadDashboard();
     });
 
     exportBtn.addEventListener('click', async () => {
@@ -740,6 +742,246 @@ function applyGraphFilters() {
                 }
             }
             el.style('display', visible ? 'element' : 'none');
+        });
+    });
+}
+
+// ---------- Tab: дашборд ----------
+
+function setupDashboardTab() {
+    const loadBtn = document.getElementById('dashboard-load-btn');
+    loadBtn.addEventListener('click', loadDashboard);
+}
+
+async function loadDashboard() {
+    const status = document.getElementById('dashboard-status');
+    const content = document.getElementById('dashboard-content');
+    const loadBtn = document.getElementById('dashboard-load-btn');
+
+    loadBtn.disabled = true;
+    status.textContent = 'Загружаю...';
+
+    const r = await window.pywebview.api.get_dashboard();
+
+    loadBtn.disabled = false;
+
+    if (!r.ok) {
+        status.textContent = 'Ошибка: ' + r.error;
+        content.style.display = 'none';
+        return;
+    }
+
+    status.textContent = '';
+    content.style.display = 'block';
+
+    renderKpi(r.kpi);
+    renderTierBars(r.tier_distribution);
+    renderTopCves(r.top_cves);
+    renderTopProducts(r.top_products);
+    renderTopCwes(r.top_cwes);
+    renderKevDeadlines(r.kev_deadlines);
+    renderRansomware(r.ransomware_cves);
+}
+
+function renderKpi(kpi) {
+    const grid = document.getElementById('kpi-grid');
+    const cards = [];
+
+    cards.push(kpiCard('Всего CVE', kpi.total_cves, 'info'));
+
+    if (kpi.critical_now > 0) {
+        cards.push(kpiCard('Эксплуатируется', kpi.critical_now,
+            'critical', 'CISA KEV — патчить срочно'));
+    }
+    if (kpi.critical_likely > 0) {
+        cards.push(kpiCard('Вероятная эксплуатация', kpi.critical_likely,
+            'critical', 'EPSS ≥ 0.7'));
+    }
+    if (kpi.ransomware_total > 0) {
+        cards.push(kpiCard('Ransomware', kpi.ransomware_total,
+            'ransomware', 'Известное использование'));
+    }
+    if (kpi.kev_overdue > 0) {
+        cards.push(kpiCard('CISA: просрочено', kpi.kev_overdue,
+            'critical', 'Превышен дедлайн патча'));
+    }
+    if (kpi.kev_due_soon > 0) {
+        cards.push(kpiCard('CISA: скоро дедлайн', kpi.kev_due_soon,
+            'warning', 'В ближайшие 30 дней'));
+    }
+    if (kpi.high > 0) {
+        cards.push(kpiCard('Высокий риск', kpi.high, 'warning'));
+    }
+
+    grid.innerHTML = cards.join('');
+}
+
+function kpiCard(label, value, type, sub) {
+    const subHtml = sub ? `<div class="kpi-sub">${escapeHtml(sub)}</div>` : '';
+    return `
+        <div class="kpi-card kpi-${type}">
+            <div class="kpi-label">${escapeHtml(label)}</div>
+            <div class="kpi-value">${value}</div>
+            ${subHtml}
+        </div>
+    `;
+}
+
+function renderTierBars(distribution) {
+    const container = document.getElementById('tier-bars');
+    if (distribution.length === 0) {
+        container.innerHTML = '<p style="color:#6c7086;">Нет данных</p>';
+        return;
+    }
+    container.innerHTML = distribution.map(t => `
+        <div class="tier-bar">
+            <span class="tier-bar-label">${escapeHtml(t.label)}</span>
+            <div class="tier-bar-track">
+                <div class="tier-bar-fill tier-${t.tier}" style="width: ${t.percent}%"></div>
+            </div>
+            <span class="tier-bar-count">${t.count} (${t.percent}%)</span>
+        </div>
+    `).join('');
+}
+
+function renderTopCves(cves) {
+    const container = document.getElementById('top-cves');
+    if (cves.length === 0) {
+        container.innerHTML = '<p style="color:#6c7086;">Нет данных</p>';
+        return;
+    }
+    container.innerHTML = cves.map(c => {
+        const risk = c.risk_score !== null && c.risk_score !== undefined
+            ? c.risk_score.toFixed(1) : '—';
+        const tier = (c.risk_tier || '').replace('_', ' ');
+        const badges = [];
+        if (c.kev) badges.push('KEV');
+        if (c.ransomware) badges.push('ransomware');
+        const badgeText = badges.length ? ` · ${badges.join(', ')}` : '';
+
+        return `
+            <div class="top-item" data-path="${escapeHtml(c.relative_path)}">
+                <div class="top-item-main">
+                    <div class="top-item-name">${escapeHtml(c.cve_id)}</div>
+                    <div class="top-item-meta">${escapeHtml(tier)}${escapeHtml(badgeText)}</div>
+                </div>
+                <span class="top-item-score">${risk}</span>
+            </div>
+        `;
+    }).join('');
+    bindTopItemClicks(container);
+}
+
+function renderTopProducts(products) {
+    const container = document.getElementById('top-products');
+    if (products.length === 0) {
+        container.innerHTML = '<p style="color:#6c7086;">Нет данных</p>';
+        return;
+    }
+    container.innerHTML = products.map(p => {
+        const parts = [];
+        if (p.critical_now) parts.push(`${p.critical_now} crit-now`);
+        if (p.critical_likely) parts.push(`${p.critical_likely} crit-likely`);
+        if (p.high) parts.push(`${p.high} high`);
+        const meta = parts.length ? parts.join(' · ') : `всего ${p.total} CVE`;
+
+        return `
+            <div class="top-item" data-path="products/${escapeHtml(p.name)}.md">
+                <div class="top-item-main">
+                    <div class="top-item-name">${escapeHtml(p.name)}</div>
+                    <div class="top-item-meta">${escapeHtml(meta)}</div>
+                </div>
+                <span class="top-item-score">${p.total}</span>
+            </div>
+        `;
+    }).join('');
+    bindTopItemClicks(container);
+}
+
+function renderTopCwes(cwes) {
+    const container = document.getElementById('top-cwes');
+    if (cwes.length === 0) {
+        container.innerHTML = '<p style="color:#6c7086;">Нет данных</p>';
+        return;
+    }
+    container.innerHTML = cwes.map(c => {
+        const critPart = c.critical_count
+            ? ` · ${c.critical_count} критичных` : '';
+        return `
+            <div class="top-item" data-path="${escapeHtml(c.relative_path)}">
+                <div class="top-item-main">
+                    <div class="top-item-name">${escapeHtml(c.cwe_id)}</div>
+                    <div class="top-item-meta">${c.count} CVE${escapeHtml(critPart)}</div>
+                </div>
+                <span class="top-item-score">${c.count}</span>
+            </div>
+        `;
+    }).join('');
+    bindTopItemClicks(container);
+}
+
+function renderKevDeadlines(deadlines) {
+    const container = document.getElementById('kev-deadlines');
+    if (deadlines.length === 0) {
+        container.innerHTML = '<p style="color:#6c7086;">Нет CISA-дедлайнов в ближайшие 30 дней</p>';
+        return;
+    }
+    container.innerHTML = deadlines.map(d => {
+        const cls = d.overdue ? 'deadline-overdue' : 'deadline-soon';
+        const text = d.overdue
+            ? `просрочено на ${Math.abs(d.days_remaining)} дн.`
+            : `${d.days_remaining} дн. до дедлайна`;
+        return `
+            <div class="top-item" data-path="${escapeHtml(d.relative_path)}">
+                <div class="top-item-main">
+                    <div class="top-item-name">${escapeHtml(d.cve_id)}</div>
+                    <div class="top-item-meta ${cls}">${escapeHtml(d.kev_due)} · ${escapeHtml(text)}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    bindTopItemClicks(container);
+}
+
+function renderRansomware(cves) {
+    const section = document.getElementById('ransomware-section');
+    const container = document.getElementById('ransomware-list');
+    if (cves.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+    section.style.display = 'block';
+    container.innerHTML = cves.map(c => {
+        const tier = (c.risk_tier || '').replace('_', ' ');
+        return `
+            <div class="top-item" data-path="${escapeHtml(c.relative_path)}">
+                <div class="top-item-main">
+                    <div class="top-item-name">${escapeHtml(c.cve_id)}</div>
+                    <div class="top-item-meta">${escapeHtml(tier)}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    bindTopItemClicks(container);
+}
+
+function bindTopItemClicks(container) {
+    container.querySelectorAll('.top-item').forEach(el => {
+        el.addEventListener('click', () => {
+            const path = el.dataset.path;
+            if (!path) return;
+            // Переключаемся на вкладку Просмотр
+            const browseTab = document.querySelector('.tab[data-tab="browse"]');
+            if (browseTab) browseTab.click();
+            openNote(path, null);
+            // Подсветить в sidebar
+            const noteName = path.split('/').pop().replace('.md', '');
+            document.querySelectorAll('.note-group li').forEach(li => {
+                if (li.textContent === noteName) {
+                    li.classList.add('active');
+                    li.scrollIntoView({ block: 'nearest' });
+                }
+            });
         });
     });
 }

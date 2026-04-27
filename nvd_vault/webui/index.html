@@ -16,11 +16,60 @@
         <h1>NVD Vault</h1>
 
         <div class="tabs">
+            <button class="tab" data-tab="dashboard">Дашборд</button>
             <button class="tab active" data-tab="scan">Быстрое сканирование</button>
             <button class="tab" data-tab="vault">Сборка Vault</button>
             <button class="tab" data-tab="browse">Просмотр Vault</button>
             <button class="tab" data-tab="graph">Граф связей</button>
         </div>
+
+        <section id="tab-dashboard" class="tab-content">
+            <div class="dashboard-toolbar">
+                <button id="dashboard-load-btn">Обновить дашборд</button>
+                <span id="dashboard-status">Откройте vault во вкладке «Просмотр Vault», затем нажмите «Обновить»</span>
+            </div>
+
+            <div id="dashboard-content" style="display:none;">
+                <!-- KPI карточки -->
+                <div class="kpi-grid" id="kpi-grid"></div>
+
+                <!-- Распределение по risk tier -->
+                <div class="dashboard-section">
+                    <h2>Распределение по приоритету</h2>
+                    <div id="tier-bars"></div>
+                </div>
+
+                <!-- Двухколоночная сетка для топов -->
+                <div class="dashboard-cols">
+                    <div class="dashboard-section">
+                        <h2>Топ-10 уязвимостей</h2>
+                        <div id="top-cves"></div>
+                    </div>
+
+                    <div class="dashboard-section">
+                        <h2>Топ-5 продуктов по риску</h2>
+                        <div id="top-products"></div>
+                    </div>
+                </div>
+
+                <div class="dashboard-cols">
+                    <div class="dashboard-section">
+                        <h2>CISA дедлайны</h2>
+                        <div id="kev-deadlines"></div>
+                    </div>
+
+                    <div class="dashboard-section">
+                        <h2>Топ типов слабостей (CWE)</h2>
+                        <div id="top-cwes"></div>
+                    </div>
+                </div>
+
+                <div class="dashboard-section" id="ransomware-section" style="display:none;">
+                    <h2>Уязвимости в ransomware-кампаниях</h2>
+                    <div id="ransomware-list"></div>
+                </div>
+            </div>
+        </section>
 
         <section id="tab-scan" class="tab-content active">
             <div class="form">

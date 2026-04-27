@@ -341,3 +341,170 @@ button:disabled { background: #45475a; cursor: not-allowed; }
     font-weight: 600;
     margin-left: 0.5rem;
 }
+
+/* Dashboard */
+.dashboard-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+#dashboard-status {
+    color: #a6adc8;
+    font-size: 0.9rem;
+}
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 2rem;
+}
+
+.kpi-card {
+    background: #313244;
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    border-left: 4px solid #45475a;
+}
+
+.kpi-card.kpi-critical { border-left-color: #f38ba8; background: #38202a; }
+.kpi-card.kpi-warning { border-left-color: #fab387; }
+.kpi-card.kpi-info { border-left-color: #89b4fa; }
+.kpi-card.kpi-success { border-left-color: #a6e3a1; }
+.kpi-card.kpi-ransomware { border-left-color: #f38ba8; }
+
+.kpi-label {
+    color: #a6adc8;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.4rem;
+}
+
+.kpi-value {
+    color: #cdd6f4;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.kpi-card.kpi-critical .kpi-value { color: #f38ba8; }
+.kpi-card.kpi-warning .kpi-value { color: #fab387; }
+
+.kpi-sub {
+    color: #6c7086;
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+}
+
+.dashboard-section {
+    background: #313244;
+    border-radius: 8px;
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1rem;
+}
+
+.dashboard-section h2 {
+    color: #89b4fa;
+    font-size: 1.05rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.dashboard-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 1100px) {
+    .dashboard-cols { grid-template-columns: 1fr; }
+}
+
+/* Tier bars */
+.tier-bar {
+    display: grid;
+    grid-template-columns: 200px 1fr 60px;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.4rem 0;
+    font-size: 0.88rem;
+}
+
+.tier-bar-label { color: #cdd6f4; }
+.tier-bar-track {
+    background: #1e1e2e;
+    border-radius: 3px;
+    height: 18px;
+    overflow: hidden;
+}
+.tier-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+.tier-bar-fill.tier-critical_now    { background: #f38ba8; }
+.tier-bar-fill.tier-critical_likely { background: #f38ba8; opacity: 0.75; }
+.tier-bar-fill.tier-high            { background: #fab387; }
+.tier-bar-fill.tier-medium          { background: #f9e2af; }
+.tier-bar-fill.tier-low             { background: #a6e3a1; }
+.tier-bar-fill.tier-unknown         { background: #6c7086; }
+.tier-bar-count {
+    color: #a6adc8;
+    font-family: "Consolas", monospace;
+    text-align: right;
+}
+
+/* Top lists */
+.top-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.7rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 0.3rem;
+    background: #1e1e2e;
+}
+
+.top-item:hover { background: #45475a; }
+
+.top-item-main {
+    flex: 1;
+    overflow: hidden;
+}
+
+.top-item-name {
+    color: #89b4fa;
+    font-family: "Consolas", monospace;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.2rem;
+}
+
+.top-item-meta {
+    color: #a6adc8;
+    font-size: 0.78rem;
+}
+
+.top-item-score {
+    color: #cdd6f4;
+    font-weight: 600;
+    font-family: "Consolas", monospace;
+    font-size: 0.9rem;
+    margin-left: 0.8rem;
+}
+
+.deadline-overdue {
+    color: #f38ba8;
+    font-weight: 600;
+}
+
+.deadline-soon {
+    color: #fab387;
+}

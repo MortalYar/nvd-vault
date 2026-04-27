@@ -12,6 +12,7 @@ from typing import Optional
 
 import webview
 
+from nvd_vault.core.dashboard import build_dashboard
 from nvd_vault.core.enrichment import EnrichmentClient, compute_risk_score
 from nvd_vault.core.graph_builder import build_graph
 from nvd_vault.core.search_index import SearchIndex
@@ -290,6 +291,17 @@ class Api:
 
             results = self._search_index.search(query, limit=50)
             return {"ok": True, "results": results, "query": query}
+    
+    def get_dashboard(self) -> dict:
+        """Собрать данные для дашборда по открытому vault."""
+        if not self._current_vault:
+            return {"ok": False, "error": "Vault не открыт"}
+
+        try:
+            data = build_dashboard(self._current_vault)
+            return {"ok": True, **data}
+        except Exception as e:
+            return {"ok": False, "error": f"Ошибка сборки дашборда: {e}"}
     
     def get_graph_data(self) -> dict:
         """Собрать узлы и рёбра графа vault'а."""

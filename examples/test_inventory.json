@@ -1,0 +1,30 @@
+{
+  "vault_name": "Risk Tier Test Vault",
+  "products": [
+    {
+      "name": "log4j",
+      "version": "2.14.1",
+      "vendor": "apache"
+    },
+    {
+      "name": "struts",
+      "version": "2.5.16",
+      "vendor": "apache"
+    },
+    {
+      "name": "exchange_server",
+      "version": "2019",
+      "vendor": "microsoft"
+    },
+    {
+      "name": "kibana",
+      "version": "7.10.0",
+      "vendor": "elastic"
+    },
+    {
+      "name": "jenkins",
+      "version": "2.235.1",
+      "vendor": "jenkins"
+    }
+  ]
+}

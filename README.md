@@ -32,6 +32,10 @@ Desktop-приложение для аудита уязвимостей по ope
 
 ## Установка
 
+Приложение требует Python 3.13 (на 3.14 не работает из-за `pythonnet`).
+
+### Windows
+
 ```powershell
 git clone https://github.com/MortalYar/nvd-vault.git
 cd nvd-vault
@@ -43,6 +47,59 @@ py -3.13 -m venv venv
 # Зависимости
 pip install -r requirements.txt
 ```
+
+WebView2 (движок отрисовки) на Windows 11 уже встроен. На Windows 10 нужно установить отдельно: [WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/).
+
+### Linux (Ubuntu / Debian)
+
+PyWebView под Linux использует GTK + WebKit. Нужно установить системные пакеты:
+
+```bash
+# Ubuntu 24.04 / Debian 12
+sudo apt update
+sudo apt install python3.13 python3.13-venv \
+    python3-gi gir1.2-webkit2-4.1 \
+    libgirepository1.0-dev
+
+git clone https://github.com/MortalYar/nvd-vault.git
+cd nvd-vault
+
+python3.13 -m venv venv
+source venv/bin/activate
+
+pip install -r requirements.txt
+pip install pywebview[gtk]
+```
+
+Для других дистрибутивов:
+- **Fedora / RHEL:** `sudo dnf install python3.13 webkit2gtk4.1 gobject-introspection-devel`
+- **Arch:** `sudo pacman -S python webkit2gtk-4.1 gobject-introspection`
+
+### macOS
+
+PyWebView под macOS использует встроенный WKWebView, дополнительных пакетов не нужно:
+
+```bash
+git clone https://github.com/MortalYar/nvd-vault.git
+cd nvd-vault
+
+python3.13 -m venv venv
+source venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+> Сборка тестировалась только на Windows. Linux и macOS поддерживаются на уровне зависимостей PyWebView, но реальный UX может потребовать доработки.
+
+## Запуск
+
+После установки во всех системах:
+
+```bash
+python app.py
+```
+
+Откроется окно приложения с пятью вкладками.
 
 ## Запуск
 
@@ -184,10 +241,63 @@ EPSS API и CISA KEV feed работают без аутентификации.
 
 ## Ограничения
 
-- **Только Windows** — PyWebView под Windows использует WebView2; на Linux/macOS не тестировалось
+- **Тестировалось на Windows 11**, инструкции для Linux и macOS приведены, но реальный UX на этих платформах может потребовать доработки
 - **Только Application-CPE (`cpe:2.3:a:`)** — уязвимости в OS и hardware (`o:`, `h:`) не покрываются
 - **Описания CVE на английском** — без машинного перевода для сохранения технической точности
 - **Точность зависит от качества CPE в NVD** — если вендор не проставил диапазоны, версия может не сматчиться
+
+## Troubleshooting
+
+### Windows: ошибка `pythonnet` при `pip install`
+
+```
+Failed building wheel for pythonnet
+```
+
+Причина: установлен Python 3.14, для которого `pythonnet` ещё не выпустил совместимый wheel. Решение: установить Python 3.13 параллельно и использовать его для venv: `py -3.13 -m venv venv`.
+
+### Windows: окно не открывается, нет ошибок
+
+Возможно, заблокирован запуск через WDAC (Windows Defender Application Control) или Smart App Control. Проверь:
+
+```powershell
+Get-CimInstance -Namespace root\Microsoft\Windows\DeviceGuard -ClassName Win32_DeviceGuard | `
+    Select-Object CodeIntegrityPolicyEnforcementStatus
+```
+
+Если значение `2` — WDAC активна. На корпоративных машинах может потребоваться согласование с IT.
+
+### Linux: `ModuleNotFoundError: No module named 'gi'`
+
+Не установлены Python-биндинги к GTK. Установи `python3-gi gir1.2-webkit2-4.1` через системный пакетный менеджер (см. раздел установки).
+
+### Linux: окно открывается, но HTML не рендерится
+
+Версия WebKit устарела или не подхватилась. Проверь установленную версию:
+
+```bash
+pkg-config --modversion webkit2gtk-4.1
+```
+
+Должна быть 2.40 или выше.
+
+### macOS: Apple Silicon (M1/M2/M3) — `arm64` vs `x86_64`
+
+PyWebView должен установиться нативно под ARM. Если возникают проблемы с зависимостями, попробуй:
+
+```bash
+arch -arm64 python3.13 -m venv venv
+```
+
+### NVD: HTTP 404 при сканировании с API ключом
+
+API ключ не активирован. После получения ключа на nvd.nist.gov **обязательно перейди по ссылке активации в письме**, иначе NVD молча возвращает 404.
+
+### NVD: HTTP 403 без API ключа
+
+Превышен лимит без ключа (5 запросов / 30 секунд). Решения:
+- Получи API ключ для лимита 50 / 30 секунд
+- Подожди 30 секунд и повтори
 
 ## См. также
 

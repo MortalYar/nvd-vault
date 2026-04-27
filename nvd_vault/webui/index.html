@@ -4,14 +4,61 @@
     <meta charset="UTF-8">
     <title>NVD Vault</title>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+
+    <!-- Stitch design system -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "v-surface": "#031427",
+                        "v-surface-low": "#0b1c30",
+                        "v-surface-mid": "#102034",
+                        "v-surface-high": "#1b2b3f",
+                        "v-surface-bright": "#26364a",
+                        "v-on-surface": "#d3e4fe",
+                        "v-on-surface-variant": "#c2c6d6",
+                        "v-outline": "#8c909f",
+                        "v-outline-variant": "#424754",
+                        "v-primary": "#adc6ff",
+                        "v-primary-container": "#4d8eff",
+                        "v-on-primary": "#002e6a",
+                        "v-tertiary": "#ffb786",
+                        "v-tertiary-container": "#df7412",
+                        "v-error": "#ffb4ab",
+                        "v-error-container": "#93000a",
+                        "v-success": "#a6e3a1",
+                    },
+                    fontFamily: {
+                        manrope: ["Manrope", "sans-serif"],
+                        inter: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "v-sm": "0.125rem",
+                        "v-md": "0.375rem",
+                        "v-lg": "0.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dashboard.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/layout-base@2.0.1/layout-base.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cose-base@2.2.0/cose-base.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.js"></script>
 </head>
-<body>
+<body class="font-inter">
     <div class="container">
         <h1>NVD Vault</h1>
 
@@ -24,49 +71,82 @@
         </div>
 
         <section id="tab-dashboard" class="tab-content">
-            <div class="dashboard-toolbar">
-                <button id="dashboard-load-btn">Обновить дашборд</button>
-                <span id="dashboard-status">Откройте vault во вкладке «Просмотр Vault», затем нажмите «Обновить»</span>
+            <!-- Header -->
+            <div class="v-page-header">
+                <div>
+                    <h1>Командный дашборд</h1>
+                    <p class="v-page-subtitle">
+                        Ландшафт уязвимостей с приоритизацией CVSS · EPSS · CISA KEV.
+                        Открой vault, чтобы увидеть актуальную картину.
+                    </p>
+                </div>
+                <div class="v-toolbar" style="margin-bottom: 0;">
+                    <button id="dashboard-load-btn" class="v-btn-primary">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">refresh</span>
+                        Обновить
+                    </button>
+                </div>
+            </div>
+
+            <div id="dashboard-status" class="v-status-text" style="margin-bottom: 16px;">
+                Откройте vault во вкладке «Просмотр Vault», затем нажмите «Обновить».
             </div>
 
             <div id="dashboard-content" style="display:none;">
-                <!-- KPI карточки -->
-                <div class="kpi-grid" id="kpi-grid"></div>
+                <!-- KPI cards -->
+                <div class="v-kpi-grid" id="kpi-grid"></div>
 
-                <!-- Распределение по risk tier -->
-                <div class="dashboard-section">
-                    <h2>Распределение по приоритету</h2>
-                    <div id="tier-bars"></div>
+                <!-- Tier distribution -->
+                <div class="v-section">
+                    <div class="v-section-header">
+                        <h2>Распределение по приоритету</h2>
+                    </div>
+                    <div class="v-tier-bars" id="tier-bars"></div>
                 </div>
 
-                <!-- Двухколоночная сетка для топов -->
-                <div class="dashboard-cols">
-                    <div class="dashboard-section">
-                        <h2>Топ-10 уязвимостей</h2>
-                        <div id="top-cves"></div>
+                <!-- 2-column rows -->
+                <div class="v-cols">
+                    <div class="v-section">
+                        <div class="v-section-header">
+                            <h2>Топ-10 уязвимостей</h2>
+                            <span class="v-section-link">по риску</span>
+                        </div>
+                        <div class="v-list" id="top-cves"></div>
                     </div>
 
-                    <div class="dashboard-section">
-                        <h2>Топ-5 продуктов по риску</h2>
-                        <div id="top-products"></div>
-                    </div>
-                </div>
-
-                <div class="dashboard-cols">
-                    <div class="dashboard-section">
-                        <h2>CISA дедлайны</h2>
-                        <div id="kev-deadlines"></div>
-                    </div>
-
-                    <div class="dashboard-section">
-                        <h2>Топ типов слабостей (CWE)</h2>
-                        <div id="top-cwes"></div>
+                    <div class="v-section">
+                        <div class="v-section-header">
+                            <h2>Топ-5 продуктов</h2>
+                            <span class="v-section-link">по угрозам</span>
+                        </div>
+                        <div class="v-list" id="top-products"></div>
                     </div>
                 </div>
 
-                <div class="dashboard-section" id="ransomware-section" style="display:none;">
-                    <h2>Уязвимости в ransomware-кампаниях</h2>
-                    <div id="ransomware-list"></div>
+                <div class="v-cols">
+                    <div class="v-section">
+                        <div class="v-section-header">
+                            <h2>CISA дедлайны</h2>
+                            <span class="v-section-link">30 дней</span>
+                        </div>
+                        <div class="v-list" id="kev-deadlines"></div>
+                    </div>
+
+                    <div class="v-section">
+                        <div class="v-section-header">
+                            <h2>Топ типов слабостей</h2>
+                            <span class="v-section-link">CWE</span>
+                        </div>
+                        <div class="v-list" id="top-cwes"></div>
+                    </div>
+                </div>
+
+                <div class="v-section" id="ransomware-section" style="display:none;">
+                    <div class="v-section-header">
+                        <h2>Ransomware-кампании</h2>
+                        <span class="v-section-link">требуется срочный патч</span>
+                    </div>
+                    <div class="v-list" id="ransomware-list"></div>
                 </div>
             </div>
         </section>

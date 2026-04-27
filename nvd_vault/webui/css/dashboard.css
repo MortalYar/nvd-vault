@@ -544,3 +544,140 @@ input.v-input::placeholder,
 .v-scan-status.v-status-success {
     color: #a6e3a1;
 }
+
+/* ===== Tab: граф связей ===== */
+
+#tab-graph {
+    font-family: "Inter", sans-serif;
+    color: #d3e4fe;
+    margin: -2rem;
+    margin-top: 0;
+    padding: 1.5rem 2rem 3rem;
+    background: #031427;
+    min-height: calc(100vh - 100px);
+}
+
+#tab-graph h1, #tab-graph h2 {
+    font-family: "Manrope", sans-serif;
+}
+
+.v-graph-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.v-graph-stats {
+    color: #c2c6d6;
+    font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+    font-size: 12px;
+}
+
+.v-graph-hint {
+    color: #8c909f;
+    font-size: 12px;
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.v-graph-hint .material-symbols-outlined {
+    color: #adc6ff;
+}
+
+.v-graph-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: #102034;
+    border: 1px solid #1b2b3f;
+    border-radius: 0.375rem;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+}
+
+.v-graph-controls .v-check {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+    color: #d3e4fe;
+}
+
+.v-graph-controls input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #031427;
+    border: 1px solid #424754;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    margin: 0;
+    position: relative;
+    transition: background 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+}
+
+.v-graph-controls input[type="checkbox"]:hover {
+    border-color: #adc6ff;
+}
+
+.v-graph-controls input[type="checkbox"]:checked {
+    background: #4d8eff;
+    border-color: #4d8eff;
+}
+
+.v-graph-controls input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 0px;
+    width: 5px;
+    height: 10px;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.v-graph-controls .v-separator {
+    color: #424754;
+    margin: 0 4px;
+}
+
+.v-graph-container {
+    background: #031427;
+    border: 1px solid #1b2b3f;
+    border-radius: 0.5rem;
+    height: calc(100vh - 280px);
+    min-height: 500px;
+    width: 100%;
+    position: relative;
+}
+
+.v-graph-tooltip {
+    position: fixed;
+    z-index: 1000;
+    background: #102034;
+    border: 1px solid #424754;
+    color: #d3e4fe;
+    padding: 10px 14px;
+    border-radius: 0.375rem;
+    font-size: 12px;
+    pointer-events: none;
+    max-width: 320px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+    font-family: "Inter", sans-serif;
+}
+
+.v-graph-tooltip strong {
+    color: #adc6ff;
+    font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+}

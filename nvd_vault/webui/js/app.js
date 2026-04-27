@@ -858,8 +858,10 @@ function setupGraphTab() {
 
         graphRawData = r;
         stats.textContent =
-            `${r.stats.products} продуктов · ${r.stats.cves} CVE · ` +
-            `${r.stats.cwes} CWE · ${r.stats.edges} связей`;
+            `${r.stats.products} ${plural(r.stats.products, 'продукт', 'продукта', 'продуктов')} · ` +
+            `${r.stats.cves} CVE · ` +
+            `${r.stats.cwes} CWE · ` +
+            `${r.stats.edges} ${plural(r.stats.edges, 'связь', 'связи', 'связей')}`;
 
         controls.style.display = 'flex';
         renderGraph(r.nodes, r.edges);
@@ -943,26 +945,29 @@ function getCytoscapeStyle() {
             selector: 'node',
             style: {
                 'label': 'data(label)',
-                'color': '#cdd6f4',
+                'color': '#d3e4fe',
+                'font-family': 'Inter, sans-serif',
                 'font-size': '10px',
-                'text-outline-color': '#1e1e2e',
+                'text-outline-color': '#031427',
                 'text-outline-width': 2,
                 'text-valign': 'center',
                 'text-halign': 'center',
                 'border-width': 0,
             },
         },
-        // Продукты — синие квадраты
+        // Продукты — синие плашки в стиле Vault Sentinel
         {
             selector: 'node[type="product"]',
             style: {
                 'shape': 'round-rectangle',
-                'background-color': '#89b4fa',
-                'width': 80,
+                'background-color': '#4d8eff',
+                'width': 84,
                 'height': 32,
-                'color': '#1e1e2e',
+                'color': '#ffffff',
                 'font-weight': 'bold',
                 'text-outline-width': 0,
+                'border-width': 1,
+                'border-color': '#adc6ff',
             },
         },
         // CWE — серые ромбы
@@ -970,9 +975,11 @@ function getCytoscapeStyle() {
             selector: 'node[type="cwe"]',
             style: {
                 'shape': 'diamond',
-                'background-color': '#6c7086',
+                'background-color': '#26364a',
                 'width': 40,
                 'height': 40,
+                'border-width': 1,
+                'border-color': '#424754',
             },
         },
         // CVE — круги по severity
@@ -982,19 +989,21 @@ function getCytoscapeStyle() {
                 'shape': 'ellipse',
                 'width': 24,
                 'height': 24,
-                'background-color': '#a6adc8',
+                'background-color': '#8c909f',
+                'border-width': 1,
+                'border-color': '#26364a',
             },
         },
-        { selector: 'node[severity="critical"]', style: { 'background-color': '#f38ba8' } },
-        { selector: 'node[severity="high"]',     style: { 'background-color': '#fab387' } },
-        { selector: 'node[severity="medium"]',   style: { 'background-color': '#f9e2af' } },
-        { selector: 'node[severity="low"]',      style: { 'background-color': '#a6e3a1' } },
-        // KEV — обводка
+        { selector: 'node[severity="critical"]', style: { 'background-color': '#ffb4ab', 'border-color': '#93000a' } },
+        { selector: 'node[severity="high"]',     style: { 'background-color': '#ffb786', 'border-color': '#df7412' } },
+        { selector: 'node[severity="medium"]',   style: { 'background-color': '#f9e2af', 'border-color': '#a08000' } },
+        { selector: 'node[severity="low"]',      style: { 'background-color': '#a6e3a1', 'border-color': '#3a8035' } },
+        // KEV — обводка ярче и толще
         {
             selector: 'node[type="cve"][?kev]',
             style: {
                 'border-width': 3,
-                'border-color': '#f38ba8',
+                'border-color': '#ffb4ab',
             },
         },
         // Рёбра
@@ -1002,39 +1011,32 @@ function getCytoscapeStyle() {
             selector: 'edge',
             style: {
                 'width': 1,
-                'line-color': '#45475a',
+                'line-color': '#26364a',
                 'curve-style': 'bezier',
                 'target-arrow-shape': 'none',
+                'opacity': 0.7,
             },
         },
         {
             selector: 'edge[type="instance-of"]',
             style: {
-                'line-color': '#585b70',
+                'line-color': '#424754',
                 'line-style': 'dashed',
             },
         },
-        // Состояния
-        {
-            selector: 'node:selected',
-            style: {
-                'border-width': 3,
-                'border-color': '#cba6f7',
-            },
-        },
-        // Подсветка/затемнение
+        // Подсветка / затемнение
         {
             selector: '.dimmed',
             style: {
-                'opacity': 0.15,
-                'text-opacity': 0.15,
+                'opacity': 0.12,
+                'text-opacity': 0.12,
             },
         },
         {
             selector: '.highlighted',
             style: {
                 'border-width': 3,
-                'border-color': '#cba6f7',
+                'border-color': '#adc6ff',
                 'z-index': 10,
             },
         },
@@ -1042,16 +1044,16 @@ function getCytoscapeStyle() {
             selector: 'edge.highlighted',
             style: {
                 'width': 2.5,
-                'line-color': '#cba6f7',
-                'z-index': 10,
+                'line-color': '#4d8eff',
                 'opacity': 1,
+                'z-index': 10,
             },
         },
         {
             selector: 'node.focused',
             style: {
                 'border-width': 4,
-                'border-color': '#f9e2af',
+                'border-color': '#ffb786',
                 'z-index': 20,
             },
         },
@@ -1500,4 +1502,18 @@ function bindTopItemClicks(container) {
             });
         });
     });
+}
+
+/**
+ * Русское склонение по числу.
+ * plural(1, 'продукт', 'продукта', 'продуктов') -> 'продукт'
+ * plural(2, 'продукт', 'продукта', 'продуктов') -> 'продукта'
+ * plural(5, 'продукт', 'продукта', 'продуктов') -> 'продуктов'
+ */
+function plural(n, one, few, many) {
+    const mod10 = n % 10;
+    const mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return one;
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+    return many;
 }

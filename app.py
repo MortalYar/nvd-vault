@@ -23,7 +23,11 @@ def main() -> None:
         height=800,
         min_size=(800, 600),
     )
-    webview.start(debug=True)
+    icon_path = Path(__file__).parent / "nvd_vault" / "webui" / "assets" / "favicon.ico"
+    webview.start(
+        debug=True,
+        icon=str(icon_path) if icon_path.exists() else None,
+    )
 
 
 if __name__ == "__main__":

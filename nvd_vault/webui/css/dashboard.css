@@ -395,14 +395,14 @@
     display: grid;
     grid-template-columns: 1fr 1fr 1fr auto;
     gap: 12px;
-    align-items: stretch;
+    align-items: end;
 }
 
 .v-form .v-btn-primary {
-    align-self: end;
-    height: 38px;
+    height: 40px;
     padding: 0 16px;
     white-space: nowrap;
+    margin-bottom: 0;
 }
 
 @media (max-width: 900px) {
@@ -680,4 +680,414 @@ input.v-input::placeholder,
 .v-graph-tooltip strong {
     color: #adc6ff;
     font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+}
+
+/* ===== Tab: сборка vault ===== */
+
+#tab-vault {
+    font-family: "Inter", sans-serif;
+    color: #d3e4fe;
+    margin: -2rem;
+    margin-top: 0;
+    padding: 1.5rem 2rem 3rem;
+    background: #031427;
+    min-height: calc(100vh - 100px);
+}
+
+#tab-vault h1, #tab-vault h2, #tab-vault h3 {
+    font-family: "Manrope", sans-serif;
+}
+
+/* Section header с действиями справа */
+.v-section-with-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.v-section-with-actions h2 {
+    font-family: "Manrope", sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #d3e4fe;
+    margin: 0;
+}
+
+.v-section-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* Vault name input row */
+.v-vault-meta {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.v-vault-meta .v-field {
+    flex: 1;
+    min-width: 280px;
+}
+
+.v-path-display {
+    color: #8c909f;
+    font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+    font-size: 11px;
+    padding-bottom: 9px;
+    word-break: break-all;
+    flex: 2;
+}
+
+/* Products table */
+.v-products-wrapper {
+    background: #0b1c30;
+    border: 1px solid #1b2b3f;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.v-products-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "Inter", sans-serif;
+}
+
+.v-products-table thead {
+    background: #102034;
+    border-bottom: 1px solid #1b2b3f;
+}
+
+.v-products-table th {
+    text-align: left;
+    padding: 10px 14px;
+    color: #c2c6d6;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.v-products-table td {
+    padding: 8px 10px;
+    border-top: 1px solid #1b2b3f;
+    vertical-align: middle;
+}
+
+.v-products-table tbody tr:first-child td {
+    border-top: none;
+}
+
+.v-products-table tbody tr:hover {
+    background: #102034;
+}
+
+.v-products-table input[type="text"] {
+    background: transparent;
+    color: #ffffff;
+    border: 1px solid transparent;
+    padding: 0 8px;
+    height: 28px;
+    border-radius: 0.25rem;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.v-products-table input[type="text"]:hover {
+    background: #031427;
+    border-color: #1b2b3f;
+}
+
+.v-products-table input[type="text"]:focus {
+    background: #031427;
+    border-color: #adc6ff;
+    outline: none;
+}
+
+.v-products-table input[type="text"]::placeholder {
+    color: #8c909f;
+    opacity: 1;
+}
+
+.v-vendor-cell {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.v-vendor-cell input {
+    flex: 1;
+}
+
+.v-btn-discover {
+    background: #1b2b3f;
+    color: #adc6ff;
+    border: 1px solid #424754;
+    border-radius: 0.25rem;
+    padding: 0;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.v-btn-discover:hover {
+    background: #102034;
+    border-color: #adc6ff;
+}
+
+.v-btn-discover:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.v-products-table .v-row-actions {
+    width: 60px;
+    text-align: right;
+    vertical-align: middle;
+}
+
+.v-products-table .v-row-actions .v-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.v-btn-icon {
+    background: transparent;
+    color: #c2c6d6;
+    border: 1px solid transparent;
+    padding: 0;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+}
+
+.v-btn-icon:hover {
+    background: rgba(255, 180, 171, 0.1);
+    color: #ffb4ab;
+    border-color: rgba(255, 180, 171, 0.3);
+}
+
+.v-empty-row td {
+    text-align: center;
+    color: #8c909f;
+    font-style: italic;
+    padding: 28px !important;
+}
+
+/* Inv status */
+.v-inv-status {
+    font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+    font-size: 12px;
+    color: #c2c6d6;
+    padding: 8px 0;
+    min-height: 1.4rem;
+    transition: color 0.2s;
+}
+
+.v-inv-status.v-status-success { color: #a6e3a1; }
+.v-inv-status.v-status-error { color: #ffb4ab; }
+
+/* Build form / log */
+.v-build-form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 16px;
+}
+
+.v-build-form .v-field { min-width: 0; }
+
+/* Кнопка "Собрать Vault" — высота input'а, прижата к низу */
+.v-build-form > .v-btn-primary {
+    height: 45px;
+    padding: 0 16px;
+    white-space: nowrap;
+    margin: 0;
+    box-sizing: border-box;
+    align-self: end;
+    transform: translateY(0);
+}
+
+.v-file-row > input {
+    flex: 1;
+    min-width: 0;
+}
+
+.v-file-row > .v-btn-secondary {
+    height: 45px;
+    padding: 0 14px;
+    white-space: nowrap;
+    margin: 0;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* File row: input + кнопка "Выбрать" одной высоты */
+.v-file-row {
+    display: flex;
+    gap: 6px;
+    align-items: stretch;
+}
+
+.v-file-row {
+    display: flex;
+    gap: 6px;
+    align-items: stretch;
+}
+
+.v-file-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+.v-build-log {
+    background: #031427;
+    border: 1px solid #1b2b3f;
+    border-radius: 0.375rem;
+    padding: 12px 16px;
+    font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+    font-size: 12px;
+    color: #c2c6d6;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    min-height: 2rem;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.v-build-log:empty { display: none; }
+
+/* ===== Modal ===== */
+.v-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 20, 39, 0.75);
+    backdrop-filter: blur(2px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.v-modal {
+    background: #102034;
+    border: 1px solid #424754;
+    border-radius: 0.5rem;
+    padding: 24px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.v-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.v-modal-header h3 {
+    font-family: "Manrope", sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #d3e4fe;
+    margin: 0;
+}
+
+.v-modal-close {
+    background: transparent;
+    color: #c2c6d6;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 0.25rem;
+    line-height: 1;
+}
+
+.v-modal-close:hover {
+    background: #1b2b3f;
+    color: #d3e4fe;
+}
+
+.v-modal-subtitle {
+    color: #c2c6d6;
+    font-size: 13px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.v-modal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.v-modal-vendor {
+    background: #0b1c30;
+    border: 1px solid #1b2b3f;
+    border-radius: 0.375rem;
+    padding: 10px 14px;
+    cursor: pointer;
+    text-align: left;
+    color: #d3e4fe;
+    font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+    font-size: 13px;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+}
+
+.v-modal-vendor > span:first-child {
+    flex: 1;
+    text-align: left;
+}
+
+.v-modal-vendor-rank {
+    color: #8c909f;
+    font-size: 11px;
+    font-family: "Inter", sans-serif;
+    flex-shrink: 0;
+}
+
+.v-modal-vendor:hover {
+    background: #1b2b3f;
+    border-color: #adc6ff;
+}
+
+.v-modal-vendor-rank {
+    color: #8c909f;
+    font-size: 11px;
 }

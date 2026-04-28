@@ -190,28 +190,50 @@
         </section>
 
         <section id="tab-vault" class="tab-content">
+            <div class="v-page-header">
+                <div>
+                    <h1>Сборка Vault</h1>
+                    <p class="v-page-subtitle">
+                        Полноценный аудит инвентаря с сохранением в файловой системе.
+                        Опиши свои продукты, сохрани inventory.json, выбери папку для vault — приложение опросит NVD, EPSS и CISA KEV, посчитает risk tier для каждой CVE.
+                    </p>
+                </div>
+            </div>
+
             <!-- Inventory editor -->
-            <div class="inventory-editor">
-                <div class="editor-header">
+            <div class="v-section">
+                <div class="v-section-with-actions">
                     <h2>Inventory</h2>
-                    <div class="editor-actions">
-                        <button id="inv-new-btn" class="btn-secondary">Новый</button>
-                        <button id="inv-open-btn" class="btn-secondary">Открыть...</button>
-                        <button id="inv-save-btn" class="btn-secondary" disabled>Сохранить</button>
-                        <button id="inv-save-as-btn" class="btn-secondary" disabled>Сохранить как...</button>
+                    <div class="v-section-actions">
+                        <button id="inv-new-btn" class="v-btn-secondary">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">add</span>
+                            Новый
+                        </button>
+                        <button id="inv-open-btn" class="v-btn-secondary">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">folder_open</span>
+                            Открыть
+                        </button>
+                        <button id="inv-save-btn" class="v-btn-secondary" disabled>
+                            <span class="material-symbols-outlined" style="font-size: 16px;">save</span>
+                            Сохранить
+                        </button>
+                        <button id="inv-save-as-btn" class="v-btn-secondary" disabled>
+                            <span class="material-symbols-outlined" style="font-size: 16px;">save_as</span>
+                            Сохранить как
+                        </button>
                     </div>
                 </div>
 
-                <div class="inventory-meta">
-                    <label>
-                        Имя vault:
-                        <input type="text" id="inv-vault-name" placeholder="например, ELK Stack Production">
-                    </label>
-                    <span id="inv-current-path" class="path-display"></span>
+                <div class="v-vault-meta">
+                    <div class="v-field">
+                        <label class="v-field-label" for="inv-vault-name">Имя vault</label>
+                        <input type="text" class="v-input" id="inv-vault-name" placeholder="например, ELK Stack Production">
+                    </div>
+                    <span id="inv-current-path" class="v-path-display"></span>
                 </div>
 
-                <div class="products-table-wrapper">
-                    <table class="products-table">
+                <div class="v-products-wrapper">
+                    <table class="v-products-table">
                         <thead>
                             <tr>
                                 <th>Продукт</th>
@@ -220,29 +242,44 @@
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody id="products-tbody">
-                        </tbody>
+                        <tbody id="products-tbody"></tbody>
                     </table>
                 </div>
 
-                <button id="inv-add-product" class="btn-secondary add-product-btn">+ Добавить продукт</button>
+                <button id="inv-add-product" class="v-btn-secondary">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">add</span>
+                    Добавить продукт
+                </button>
 
-                <div id="inv-status" class="inv-status"></div>
+                <div id="inv-status" class="v-inv-status"></div>
             </div>
 
             <!-- Build section -->
-            <div class="form build-form">
-                <label>
-                    Папка для vault:
-                    <div class="file-row">
-                        <input type="text" id="vault-path" readonly placeholder="не выбрана">
-                        <button id="pick-vault">Выбрать...</button>
+            <div class="v-section">
+                <div class="v-section-with-actions">
+                    <h2>Сборка</h2>
+                </div>
+
+                <div class="v-build-form">
+                    <div class="v-field">
+                        <label class="v-field-label" for="vault-path">Папка для vault</label>
+                        <div class="v-file-row">
+                            <input type="text" class="v-input" id="vault-path" readonly placeholder="не выбрана">
+                            <button id="pick-vault" class="v-btn-secondary">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">folder</span>
+                                Выбрать
+                            </button>
+                        </div>
                     </div>
-                </label>
-                <input type="hidden" id="inventory-path">
-                <button id="build-btn" disabled>Собрать Vault</button>
+                    <input type="hidden" id="inventory-path">
+                    <button id="build-btn" class="v-btn-primary" disabled>
+                        <span class="material-symbols-outlined" style="font-size: 18px;">construction</span>
+                        Собрать Vault
+                    </button>
+                </div>
+
+                <div id="build-log" class="v-build-log"></div>
             </div>
-            <div id="build-log"></div>
         </section>
 
         <section id="tab-browse" class="tab-content">
@@ -359,6 +396,21 @@
             <div id="graph-tooltip" class="v-graph-tooltip" style="display:none;"></div>
         </section>
     </div>
+
+    <!-- Modal: vendor picker -->
+    <div id="vendor-modal" class="v-modal-overlay" style="display:none;">
+        <div class="v-modal">
+            <div class="v-modal-header">
+                <h3>Выбери vendor</h3>
+                <button class="v-modal-close" id="vendor-modal-close">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+                </button>
+            </div>
+            <p class="v-modal-subtitle" id="vendor-modal-subtitle"></p>
+            <div class="v-modal-list" id="vendor-modal-list"></div>
+        </div>
+    </div>
+
     <script src="js/app.js"></script>
 </body>
 </html>

@@ -210,7 +210,7 @@ function setupInventoryEditor() {
     addBtn.addEventListener('click', () => {
         // Если в таблице placeholder "пусто" — убираем его
         const tbody = document.getElementById('products-tbody');
-        if (tbody.querySelector('.empty-row')) {
+        if (tbody.querySelector('.v-empty-row')) {
             tbody.innerHTML = '';
         }
         addProductRow();
@@ -221,8 +221,8 @@ function setupInventoryEditor() {
 function renderEmptyTable() {
     const tbody = document.getElementById('products-tbody');
     tbody.innerHTML = `
-        <tr class="empty-row">
-            <td colspan="4">Inventory пуст. Нажми «+ Добавить продукт» чтобы начать.</td>
+        <tr class="v-empty-row">
+            <td colspan="4">Inventory пуст. Нажми «Добавить продукт» чтобы начать.</td>
         </tr>
     `;
 }
@@ -234,18 +234,22 @@ function addProductRow(data = {}) {
         <td><input type="text" class="prod-name" value="${escapeAttr(data.name || '')}" placeholder="напр. kibana"></td>
         <td><input type="text" class="prod-version" value="${escapeAttr(data.version || '')}" placeholder="8.19.9"></td>
         <td>
-            <div class="vendor-cell">
+            <div class="v-vendor-cell">
                 <input type="text" class="prod-vendor" value="${escapeAttr(data.vendor || '')}" placeholder="опционально">
-                <button class="btn-discover" type="button" title="Найти vendor через NVD">?</button>
+                <button class="v-btn-discover" type="button" title="Найти vendor через NVD">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">search</span>
+                </button>
             </div>
         </td>
-        <td class="row-actions">
-            <button class="btn-danger" type="button" title="Удалить">×</button>
+        <td class="v-row-actions">
+            <button class="v-btn-icon" type="button" title="Удалить">
+                <span class="material-symbols-outlined" style="font-size: 16px;">close</span>
+            </button>
         </td>
     `;
 
     // Удаление
-    row.querySelector('.btn-danger').addEventListener('click', () => {
+    row.querySelector('.v-btn-icon').addEventListener('click', () => {
         row.remove();
         const tb = document.getElementById('products-tbody');
         if (tb.children.length === 0) renderEmptyTable();
@@ -253,7 +257,7 @@ function addProductRow(data = {}) {
     });
 
     // Discover vendor
-    row.querySelector('.btn-discover').addEventListener('click', async (evt) => {
+    row.querySelector('.v-btn-discover').addEventListener('click', async (evt) => {
         const btn = evt.currentTarget;
         const nameInput = row.querySelector('.prod-name');
         const vendorInput = row.querySelector('.prod-vendor');
@@ -265,12 +269,13 @@ function addProductRow(data = {}) {
         }
 
         btn.disabled = true;
-        btn.textContent = '...';
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">progress_activity</span>';
 
         const r = await window.pywebview.api.discover_vendor(product);
 
         btn.disabled = false;
-        btn.textContent = '?';
+        btn.innerHTML = originalHtml;
 
         if (!r.ok) {
             setStatus('Ошибка: ' + r.error, 'error');
@@ -281,15 +286,18 @@ function addProductRow(data = {}) {
             return;
         }
 
-        vendorInput.value = r.vendors[0];
-        if (r.vendors.length > 1) {
-            setStatus(
-                `Найдено ${r.vendors.length} вариантов: ${r.vendors.join(', ')}. ` +
-                `Подставлен '${r.vendors[0]}'.`, 'success'
-            );
-        } else {
+        // Один вариант — подставляем сразу
+        if (r.vendors.length === 1) {
+            vendorInput.value = r.vendors[0];
             setStatus(`Vendor: ${r.vendors[0]}`, 'success');
+            return;
         }
+
+        // Несколько — открываем модалку
+        showVendorPicker(product, r.vendors, (chosen) => {
+            vendorInput.value = chosen;
+            setStatus(`Vendor: ${chosen}`, 'success');
+        });
     });
 
     // При вводе любого поля — обновляем состояние кнопок
@@ -304,7 +312,7 @@ function addProductRow(data = {}) {
 function gatherProducts() {
     const products = [];
     document.querySelectorAll('#products-tbody tr').forEach(row => {
-        if (row.classList.contains('empty-row')) return;
+        if (row.classList.contains('v-empty-row')) return;
         const name = row.querySelector('.prod-name')?.value.trim();
         const version = row.querySelector('.prod-version')?.value.trim();
         const vendor = row.querySelector('.prod-vendor')?.value.trim();
@@ -357,12 +365,15 @@ function updatePathDisplay() {
 function setStatus(msg, kind = '') {
     const el = document.getElementById('inv-status');
     el.textContent = msg;
-    el.className = 'inv-status' + (kind ? ' ' + kind : '');
+    el.className = 'v-inv-status'
+        + (kind === 'success' ? ' v-status-success'
+         : kind === 'error' ? ' v-status-error'
+         : '');
     if (kind === 'success') {
         setTimeout(() => {
             if (el.textContent === msg) {
                 el.textContent = '';
-                el.className = 'inv-status';
+                el.className = 'v-inv-status';
             }
         }, 5000);
     }
@@ -1516,4 +1527,56 @@ function plural(n, one, few, many) {
     if (mod10 === 1 && mod100 !== 11) return one;
     if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
     return many;
+}
+/**
+ * Показать модалку выбора vendor.
+ * vendors -- список вариантов от NVD, отсортированных по релевантности.
+ * onPick -- callback с выбранным значением.
+ */
+function showVendorPicker(product, vendors, onPick) {
+    const modal = document.getElementById('vendor-modal');
+    const subtitle = document.getElementById('vendor-modal-subtitle');
+    const list = document.getElementById('vendor-modal-list');
+    const closeBtn = document.getElementById('vendor-modal-close');
+
+    subtitle.textContent =
+        `NVD предложил ${vendors.length} ${plural(vendors.length, 'вариант', 'варианта', 'вариантов')} ` +
+        `для продукта '${product}'. Выбери подходящий.`;
+
+    list.innerHTML = vendors.map((v, idx) => `
+        <button class="v-modal-vendor" data-vendor="${escapeAttr(v)}">
+            <span>${escapeHtml(v)}</span>
+            <span class="v-modal-vendor-rank">${idx === 0 ? 'наиболее частый' : '#' + (idx + 1)}</span>
+        </button>
+    `).join('');
+
+    function close() {
+        modal.style.display = 'none';
+        list.querySelectorAll('.v-modal-vendor').forEach(b => b.replaceWith(b.cloneNode(true)));
+        closeBtn.removeEventListener('click', close);
+        modal.removeEventListener('click', onOverlayClick);
+        document.removeEventListener('keydown', onEsc);
+    }
+
+    function onOverlayClick(evt) {
+        if (evt.target === modal) close();
+    }
+
+    function onEsc(evt) {
+        if (evt.key === 'Escape') close();
+    }
+
+    list.querySelectorAll('.v-modal-vendor').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const chosen = btn.dataset.vendor;
+            close();
+            onPick(chosen);
+        });
+    });
+
+    closeBtn.addEventListener('click', close);
+    modal.addEventListener('click', onOverlayClick);
+    document.addEventListener('keydown', onEsc);
+
+    modal.style.display = 'flex';
 }

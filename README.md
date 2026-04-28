@@ -93,16 +93,6 @@ pip install -r requirements.txt
 
 ## Запуск
 
-После установки во всех системах:
-
-```bash
-python app.py
-```
-
-Откроется окно приложения с пятью вкладками.
-
-## Запуск
-
 ```powershell
 python app.py
 ```

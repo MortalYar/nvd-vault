@@ -63,6 +63,18 @@ def run_gui() -> None:
         icon=str(icon_path) if icon_path.exists() else None,
     )
 
+def validate_build_paths(inventory_path: Path, vault_path: Path) -> None:
+    if not inventory_path.exists():
+        raise FileNotFoundError(f"Inventory не найден: {inventory_path}")
+
+    if not inventory_path.is_file():
+        raise ValueError(f"Inventory должен быть файлом: {inventory_path}")
+
+    if inventory_path.suffix.lower() != ".json":
+        raise ValueError("Inventory должен быть JSON-файлом с расширением .json")
+
+    if vault_path.exists() and not vault_path.is_dir():
+        raise ValueError(f"Путь для vault уже существует и не является папкой: {vault_path}")
 
 def run_build_command(args: argparse.Namespace) -> int:
     """Собрать vault из inventory.json в CLI-режиме."""
@@ -72,12 +84,22 @@ def run_build_command(args: argparse.Namespace) -> int:
     if not output_path:
         output_path = input("Введите путь для сохранения vault: ").strip()
 
+    if not output_path:
+        logger.error("Путь для сохранения vault не может быть пустым")
+        return 1
+
     vault_path = Path(output_path).expanduser().resolve()
     api_key = args.api_key or os.getenv("NVD_API_KEY")
 
     try:
-        inventory = load_inventory(inventory_path)
+        validate_build_paths(inventory_path, vault_path)
     except (FileNotFoundError, ValueError) as e:
+        logger.error("%s", e)
+        return 1
+
+    try:
+        inventory = load_inventory(inventory_path)
+    except ValueError as e:
         logger.error("%s", e)
         return 1
 
@@ -91,8 +113,11 @@ def run_build_command(args: argparse.Namespace) -> int:
             progress_callback=show_progress,
         )
         meta = builder.build(inventory)
+    except RuntimeError as e:
+        logger.error("Не удалось собрать vault: %s", e)
+        return 1
     except Exception as e:
-        logger.exception("Не удалось собрать vault")
+        logger.error("Неожиданная ошибка при сборке vault: %s", e)
         return 1
 
     print()

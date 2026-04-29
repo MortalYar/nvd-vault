@@ -203,7 +203,7 @@
             <!-- Inventory editor -->
             <div class="v-section">
                 <div class="v-section-with-actions">
-                    <h2>Inventory</h2>
+                    <h2>Inventory editor</h2>
                     <div class="v-section-actions">
                         <button id="inv-new-btn" class="v-btn-secondary">
                             <span class="material-symbols-outlined" style="font-size: 16px;">add</span>
@@ -222,6 +222,10 @@
                             Сохранить как
                         </button>
                     </div>
+                    <p class="v-page-subtitle" style="margin-top: 8px;">
+                        Этот блок нужен для ручного создания и редактирования inventory.json.
+                        Для импорта CycloneDX/SPDX SBOM используй нижний блок «Сборка».
+                    </p>
                 </div>
 
                 <div class="v-vault-meta">
@@ -290,7 +294,7 @@
                         </div>
                     </div>
                     <input type="hidden" id="inventory-path">
-                    <div id="build-input-preview" class="v-inv-status"></div>
+                    <div id="build-input-preview" class="v-input-preview" style="display:none;"></div>
                     <button id="build-btn" class="v-btn-primary" disabled>
                         <span class="material-symbols-outlined" style="font-size: 18px;">construction</span>
                         Собрать Vault

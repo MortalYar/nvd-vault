@@ -488,35 +488,64 @@ async function updateBuildInputPreview() {
     const preview = document.getElementById('build-input-preview');
 
     if (!inputPath) {
-        preview.textContent = '';
-        preview.className = 'v-inv-status';
+        preview.style.display = 'none';
+        preview.innerHTML = '';
         return;
     }
 
     const r = await window.pywebview.api.preview_build_input(inputPath, inputFormat);
 
     if (!r.ok) {
-        preview.textContent = 'Ошибка preview: ' + r.error;
-        preview.className = 'v-inv-status v-status-error';
+        preview.style.display = 'block';
+        preview.className = 'v-input-preview v-input-preview-error';
+        preview.innerHTML = `
+            <div class="v-input-preview-title">Input preview</div>
+            <div class="v-input-preview-error-text">Ошибка: ${escapeHtml(r.error)}</div>
+        `;
         return;
     }
 
-    const products = r.products
-        .map(p => {
-            const vendor = p.vendor ? ` / ${p.vendor}` : '';
-            return `${p.name} ${p.version}${vendor}`;
-        })
-        .join(', ');
+    const productsHtml = r.products.map(p => {
+        const vendor = p.vendor ? `<span class="v-input-preview-vendor">${escapeHtml(p.vendor)}</span>` : '';
+        return `
+            <li>
+                <span>${escapeHtml(p.name)} ${escapeHtml(p.version)}</span>
+                ${vendor}
+            </li>
+        `;
+    }).join('');
 
     const more = r.products_count > r.products.length
-        ? ` и ещё ${r.products_count - r.products.length}`
+        ? `<li class="v-input-preview-more">и ещё ${r.products_count - r.products.length}</li>`
         : '';
 
-    preview.textContent =
-        `Vault: ${r.vault_name} · продуктов: ${r.products_count}` +
-        (products ? ` · ${products}${more}` : '');
+    preview.style.display = 'block';
+    preview.className = 'v-input-preview';
+    preview.innerHTML = `
+        <div class="v-input-preview-header">
+            <div>
+                <div class="v-input-preview-title">Input preview</div>
+                <div class="v-input-preview-subtitle">${escapeHtml(inputPath)}</div>
+            </div>
+            <span class="v-badge v-badge-info">${escapeHtml(inputFormat.toUpperCase())}</span>
+        </div>
 
-    preview.className = 'v-inv-status v-status-success';
+        <div class="v-input-preview-grid">
+            <div>
+                <div class="v-input-preview-label">Vault</div>
+                <div class="v-input-preview-value">${escapeHtml(r.vault_name)}</div>
+            </div>
+            <div>
+                <div class="v-input-preview-label">Products</div>
+                <div class="v-input-preview-value">${r.products_count}</div>
+            </div>
+        </div>
+
+        <ul class="v-input-preview-products">
+            ${productsHtml}
+            ${more}
+        </ul>
+    `;
 }
 
 function guessInputFormat(path) {

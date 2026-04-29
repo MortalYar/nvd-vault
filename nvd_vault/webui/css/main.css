@@ -815,3 +815,80 @@ button:disabled { background: #45475a; cursor: not-allowed; }
     font-size: 0.78rem;
     opacity: 0.8;
 }
+
+.v-input-preview {
+    margin-top: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--v-outline-variant, #424754);
+    border-radius: 12px;
+    background: rgba(173, 198, 255, 0.06);
+}
+
+.v-input-preview-error {
+    border-color: rgba(255, 180, 171, 0.6);
+    background: rgba(255, 180, 171, 0.08);
+}
+
+.v-input-preview-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.v-input-preview-title {
+    font-weight: 700;
+    color: #d3e4fe;
+}
+
+.v-input-preview-subtitle {
+    margin-top: 3px;
+    font-size: 12px;
+    color: #8c909f;
+    word-break: break-all;
+}
+
+.v-input-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.v-input-preview-label {
+    font-size: 12px;
+    color: #8c909f;
+}
+
+.v-input-preview-value {
+    margin-top: 2px;
+    font-weight: 700;
+    color: #d3e4fe;
+}
+
+.v-input-preview-products {
+    margin: 0;
+    padding-left: 18px;
+    color: #c2c6d6;
+    font-size: 13px;
+}
+
+.v-input-preview-products li {
+    margin: 4px 0;
+}
+
+.v-input-preview-vendor {
+    margin-left: 8px;
+    color: #8c909f;
+}
+
+.v-input-preview-more {
+    color: #8c909f;
+    font-style: italic;
+}
+
+.v-input-preview-error-text {
+    margin-top: 8px;
+    color: #ffb4ab;
+}

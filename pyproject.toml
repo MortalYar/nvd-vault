@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nvd-vault"
+version = "0.1.0"
+description = "Desktop tool for building a local vulnerability knowledge vault from NVD, EPSS and CISA KEV data."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [
+    { name = "MortalYar" }
+]
+dependencies = [
+    "pywebview>=6.0",
+    "requests>=2.28"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0"
+]
+
+[project.scripts]
+nvd-vault = "app:main"
+
+[tool.setuptools]
+py-modules = ["app"]
+packages = ["nvd_vault", "nvd_vault.api", "nvd_vault.core"]
+
+[tool.setuptools.package-data]
+nvd_vault = [
+    "webui/index.html",
+    "webui/css/*.css",
+    "webui/js/*.js",
+    "webui/assets/*"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

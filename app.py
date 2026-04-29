@@ -9,12 +9,14 @@
     nvd-vault build examples/sample_inventory.json --out vault/
 """
 
+import json
 import logging
 import argparse
 import os
 import sys
 from pathlib import Path
 
+from nvd_vault.core.sbom import load_sbom
 from nvd_vault.core.logging_config import setup_logging
 from nvd_vault.core.inventory import load_inventory
 from nvd_vault.core.vault_builder import VaultBuilder
@@ -76,6 +78,18 @@ def validate_build_paths(inventory_path: Path, vault_path: Path) -> None:
     if vault_path.exists() and not vault_path.is_dir():
         raise ValueError(f"Путь для vault уже существует и не является папкой: {vault_path}")
 
+def load_build_input(input_path: Path, input_format: str):
+    if input_format == "inventory":
+        return load_inventory(input_path)
+
+    if input_format == "sbom":
+        return load_sbom(input_path)
+
+    try:
+        return load_inventory(input_path)
+    except ValueError:
+        return load_sbom(input_path)
+
 def run_build_command(args: argparse.Namespace) -> int:
     """Собрать vault из inventory.json в CLI-режиме."""
     inventory_path = Path(args.inventory).expanduser().resolve()
@@ -98,8 +112,8 @@ def run_build_command(args: argparse.Namespace) -> int:
         return 1
 
     try:
-        inventory = load_inventory(inventory_path)
-    except ValueError as e:
+        inventory = load_build_input(inventory_path, args.input_format)
+    except (FileNotFoundError, ValueError, json.JSONDecodeError) as e:
         logger.error("%s", e)
         return 1
 
@@ -143,6 +157,12 @@ def build_parser() -> argparse.ArgumentParser:
     build.add_argument(
         "inventory",
         help="Path to inventory.json.",
+    )
+    build.add_argument(
+        "--input-format",
+        choices=["inventory", "sbom", "auto"],
+        default="auto",
+        help="Input format: inventory, sbom, or auto-detect. Default: auto.",
     )
     build.add_argument(
         "--out",

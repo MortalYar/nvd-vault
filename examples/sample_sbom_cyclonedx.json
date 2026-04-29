@@ -1,0 +1,29 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "Sample SBOM App"
+    }
+  },
+  "components": [
+    {
+      "type": "application",
+      "name": "kibana",
+      "version": "8.19.9",
+      "supplier": {
+        "name": "elastic"
+      }
+    },
+    {
+      "type": "application",
+      "name": "logstash",
+      "version": "8.19.5",
+      "supplier": {
+        "name": "elastic"
+      }
+    }
+  ]
+}

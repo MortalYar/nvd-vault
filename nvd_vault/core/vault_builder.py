@@ -1,7 +1,7 @@
 """Создание структуры vault на диске."""
 
 import json
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -128,7 +128,7 @@ class VaultBuilder:
 
         meta = {
             "vault_name": inventory.vault_name,
-            "built_at": datetime.utcnow().isoformat(),
+            "built_at": datetime.now(UTC).isoformat(),
             "products_count": len(product_to_cves),
             "cves_count": len(all_cves),
             "cwes_count": len(cwe_to_cves),

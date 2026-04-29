@@ -350,6 +350,11 @@ async function saveInventory(path) {
     if (buildInputPath) {
         buildInputPath.value = path;
     }
+    
+    const inputFormat = document.getElementById('input-format');
+    if (inputFormat) {
+        inputFormat.value = 'inventory';
+    }
 
     updateBuildButton();
 
@@ -417,6 +422,10 @@ function setupBuildSection() {
         if (r.ok) {
             document.getElementById('inventory-path').value = r.path;
             buildInputPath.value = r.path;
+
+            const inputFormat = document.getElementById('input-format');
+            inputFormat.value = guessInputFormat(r.path);
+
             updateBuildButton();
         }
     });
@@ -463,6 +472,20 @@ function updateBuildButton() {
     const inv = document.getElementById('inventory-path').value;
     const vault = document.getElementById('vault-path').value;
     document.getElementById('build-btn').disabled = !(inv && vault);
+}
+
+function guessInputFormat(path) {
+    const lower = String(path || '').toLowerCase();
+
+    if (lower.includes('sbom') || lower.includes('cyclonedx') || lower.includes('spdx')) {
+        return 'sbom';
+    }
+
+    if (lower.includes('inventory')) {
+        return 'inventory';
+    }
+
+    return 'auto';
 }
 
 // ---------- Tab 3: просмотр vault ----------

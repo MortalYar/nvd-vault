@@ -506,7 +506,25 @@ class Api:
             }
         except Exception as e:
             return {"ok": False, "error": f"Ошибка архивирования: {e}"}
-        
+    def preview_build_input(self, input_path: str, input_format: str = "auto") -> dict:
+        try:
+            inventory = _load_build_input(Path(input_path), input_format)
+
+            return {
+                "ok": True,
+                "vault_name": inventory.vault_name,
+                "products_count": len(inventory.products),
+                "products": [
+                    {
+                        "name": p.name,
+                        "version": p.version,
+                        "vendor": p.vendor,
+                    }
+                    for p in inventory.products[:10]
+                ],
+            }
+        except Exception as e:
+            return {"ok": False, "error": str(e)}    
 
         
 

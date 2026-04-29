@@ -357,6 +357,7 @@ async function saveInventory(path) {
     }
 
     updateBuildButton();
+    await updateBuildInputPreview();
 
     return true;
 }
@@ -416,6 +417,11 @@ function setupBuildSection() {
     const vaultInput = document.getElementById('vault-path');
     const buildBtn = document.getElementById('build-btn');
     const log = document.getElementById('build-log');
+    const inputFormatSelect = document.getElementById('input-format');
+
+    inputFormatSelect.addEventListener('change', async () => {
+        await updateBuildInputPreview();
+    });
 
     pickBuildInput.addEventListener('click', async () => {
         const r = await window.pywebview.api.select_input_file();
@@ -427,6 +433,7 @@ function setupBuildSection() {
             inputFormat.value = guessInputFormat(r.path);
 
             updateBuildButton();
+            await updateBuildInputPreview();
         }
     });
 
@@ -435,6 +442,7 @@ function setupBuildSection() {
         if (r.ok) {
             vaultInput.value = r.path;
             updateBuildButton();
+            await updateBuildInputPreview();
         }
     });
 
@@ -472,6 +480,43 @@ function updateBuildButton() {
     const inv = document.getElementById('inventory-path').value;
     const vault = document.getElementById('vault-path').value;
     document.getElementById('build-btn').disabled = !(inv && vault);
+}
+
+async function updateBuildInputPreview() {
+    const inputPath = document.getElementById('inventory-path').value;
+    const inputFormat = document.getElementById('input-format').value;
+    const preview = document.getElementById('build-input-preview');
+
+    if (!inputPath) {
+        preview.textContent = '';
+        preview.className = 'v-inv-status';
+        return;
+    }
+
+    const r = await window.pywebview.api.preview_build_input(inputPath, inputFormat);
+
+    if (!r.ok) {
+        preview.textContent = 'Ошибка preview: ' + r.error;
+        preview.className = 'v-inv-status v-status-error';
+        return;
+    }
+
+    const products = r.products
+        .map(p => {
+            const vendor = p.vendor ? ` / ${p.vendor}` : '';
+            return `${p.name} ${p.version}${vendor}`;
+        })
+        .join(', ');
+
+    const more = r.products_count > r.products.length
+        ? ` и ещё ${r.products_count - r.products.length}`
+        : '';
+
+    preview.textContent =
+        `Vault: ${r.vault_name} · продуктов: ${r.products_count}` +
+        (products ? ` · ${products}${more}` : '');
+
+    preview.className = 'v-inv-status v-status-success';
 }
 
 function guessInputFormat(path) {

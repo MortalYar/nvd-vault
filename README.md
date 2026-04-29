@@ -23,6 +23,7 @@ Desktop-приложение для аудита уязвимостей по ope
 - Interactive graph visualization via Cytoscape.js
 - Export vault as ZIP archive
 - GUI mode + CLI build mode
+- CycloneDX JSON and SPDX JSON SBOM input support
 
 ---
 
@@ -62,6 +63,31 @@ nvd-vault build examples/sample_inventory.json --out ./vault
 ```
 
 If `--out` is omitted, output path will be requested interactively.
+
+### SBOM Input
+
+NVD Vault also supports SBOM input in:
+
+- CycloneDX JSON
+- SPDX JSON
+
+CycloneDX example:
+
+```bash
+nvd-vault build examples/sample_sbom_cyclonedx.json --input-format sbom --out ./vault
+```
+
+SPDX example:
+
+```bash
+nvd-vault build examples/sample_sbom_spdx.json --input-format sbom --out ./vault
+```
+
+Auto-detect also works:
+
+```bash
+nvd-vault build examples/sample_sbom_cyclonedx.json --out ./vault
+```
 
 ---
 

@@ -1,11 +1,13 @@
 """HTTP-клиент NVD API 2.0."""
 
 import time
+import logging
 from typing import Optional
-
 import requests
 
 from .models import CpeRange, Vulnerability
+
+logger = logging.getLogger(__name__)
 
 
 NVD_CVE_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
@@ -40,6 +42,12 @@ class NvdClient:
                 last_error = e
 
                 if attempt < REQUEST_RETRIES:
+                    logger.warning(
+                        "NVD request failed, retrying %s/%s: %s",
+                        attempt,
+                        REQUEST_RETRIES,
+                        e,
+                    )
                     time.sleep(RETRY_SLEEP * attempt)
                     continue
 
@@ -69,6 +77,12 @@ class NvdClient:
                 last_error = e
 
                 if attempt < REQUEST_RETRIES:
+                    logger.warning(
+                        "NVD request failed, retrying %s/%s: %s",
+                        attempt,
+                        REQUEST_RETRIES,
+                        e,
+                    )
                     time.sleep(RETRY_SLEEP * attempt)
                     continue
 

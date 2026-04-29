@@ -9,14 +9,17 @@
     nvd-vault build examples/sample_inventory.json --out vault/
 """
 
+import logging
 import argparse
 import os
 import sys
 from pathlib import Path
 
+from nvd_vault.core.logging_config import setup_logging
 from nvd_vault.core.inventory import load_inventory
 from nvd_vault.core.vault_builder import VaultBuilder
 
+logger = logging.getLogger(__name__)
 
 def setup_windows_app_id() -> None:
     """
@@ -32,7 +35,7 @@ def setup_windows_app_id() -> None:
         app_id = "MortalYar.NvdVault.Desktop.1"
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
     except Exception as e:
-        print(f"[warn] не удалось установить AppUserModelID: {e}")
+        logger.warning("Не удалось установить AppUserModelID: %s", e)
 
 
 def run_gui() -> None:
@@ -75,7 +78,7 @@ def run_build_command(args: argparse.Namespace) -> int:
     try:
         inventory = load_inventory(inventory_path)
     except (FileNotFoundError, ValueError) as e:
-        print(f"[error] {e}", file=sys.stderr)
+        logger.error("%s", e)
         return 1
 
     def show_progress(message: str) -> None:
@@ -89,7 +92,7 @@ def run_build_command(args: argparse.Namespace) -> int:
         )
         meta = builder.build(inventory)
     except Exception as e:
-        print(f"[error] Не удалось собрать vault: {e}", file=sys.stderr)
+        logger.exception("Не удалось собрать vault")
         return 1
 
     print()
@@ -131,6 +134,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    setup_logging(debug=False)
     parser = build_parser()
     args = parser.parse_args(argv)
 

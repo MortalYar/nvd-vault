@@ -892,3 +892,45 @@ button:disabled { background: #45475a; cursor: not-allowed; }
     margin-top: 8px;
     color: #ffb4ab;
 }
+
+.v-build-progress-card {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--v-outline-variant, #424754);
+    border-radius: 12px;
+    background: rgba(173, 198, 255, 0.06);
+}
+
+.v-build-progress-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.v-build-progress-title {
+    font-weight: 700;
+    color: #d3e4fe;
+}
+
+.v-build-progress-subtitle {
+    margin-top: 3px;
+    font-size: 13px;
+    color: #8c909f;
+}
+
+.v-build-progress-track {
+    height: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(140, 144, 159, 0.25);
+}
+
+.v-build-progress-bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    background: #4d8eff;
+    transition: width 0.25s ease;
+}

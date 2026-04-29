@@ -262,6 +262,24 @@
 
                 <div class="v-build-form">
                     <div class="v-field">
+                        <label class="v-field-label" for="build-input-path">Входной файл</label>
+                        <div class="v-file-row">
+                            <input type="text" class="v-input" id="build-input-path" readonly placeholder="inventory.json или SBOM JSON не выбран">
+                            <button id="pick-build-input" class="v-btn-secondary">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">folder_open</span>
+                                Выбрать
+                            </button>
+                        </div>
+                    </div>
+                    <div class="v-field">
+                        <label class="v-field-label" for="input-format">Формат входного файла</label>
+                        <select class="v-input" id="input-format">
+                            <option value="auto">Auto</option>
+                            <option value="inventory">Inventory JSON</option>
+                            <option value="sbom">SBOM JSON</option>
+                        </select>
+                    </div>
+                    <div class="v-field">
                         <label class="v-field-label" for="vault-path">Папка для vault</label>
                         <div class="v-file-row">
                             <input type="text" class="v-input" id="vault-path" readonly placeholder="не выбрана">

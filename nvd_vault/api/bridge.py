@@ -12,6 +12,7 @@ from typing import Optional
 
 import webview
 
+from nvd_vault.core.sbom import load_sbom
 from nvd_vault.core.dashboard import build_dashboard
 from nvd_vault.core.enrichment import EnrichmentClient, compute_risk_score
 from nvd_vault.core.graph_builder import build_graph
@@ -21,6 +22,24 @@ from nvd_vault.core.matcher import cpe_matches_version
 from nvd_vault.core.nvd_client import NvdClient
 from nvd_vault.core.vault_builder import VaultBuilder
 
+
+def _load_build_input(path: Path, input_format: str):
+    if input_format == "inventory":
+        return load_inventory(path)
+
+    if input_format == "sbom":
+        return load_sbom(path)
+
+    if input_format == "auto":
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+
+        if data.get("bomFormat") == "CycloneDX" or "spdxVersion" in data:
+            return load_sbom(path)
+
+        return load_inventory(path)
+
+    raise ValueError(f"Неизвестный формат входного файла: {input_format}")
 
 class Api:
     def __init__(self) -> None:
@@ -47,6 +66,15 @@ class Api:
             return {"ok": False, "error": str(e)}
 
     def select_inventory_file(self) -> dict:
+        result = webview.windows[0].create_file_dialog(
+            webview.OPEN_DIALOG,
+            file_types=("JSON files (*.json)", "All files (*.*)"),
+        )
+        if not result:
+            return {"ok": False, "error": "Файл не выбран"}
+        return {"ok": True, "path": result[0]}
+
+    def select_input_file(self) -> dict:
         result = webview.windows[0].create_file_dialog(
             webview.OPEN_DIALOG,
             file_types=("JSON files (*.json)", "All files (*.*)"),
@@ -225,12 +253,12 @@ class Api:
     # ---------- Vault build ----------
 
     def build_vault(self, inventory_path: str, vault_path: str,
-                    api_key: str = None) -> dict:
+                api_key: str = None, input_format: str = "auto") -> dict:
         if self._build_running:
             return {"ok": False, "error": "Сборка уже запущена"}
 
         try:
-            inventory = load_inventory(Path(inventory_path))
+            inventory = _load_build_input(Path(inventory_path), input_format)
         except (FileNotFoundError, ValueError) as e:
             return {"ok": False, "error": str(e)}
 

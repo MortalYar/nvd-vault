@@ -186,6 +186,8 @@ function setupInventoryEditor() {
 
         // Автоматически устанавливаем как inventory-path для сборки
         document.getElementById('inventory-path').value = dlg.path;
+        const buildInputPath = document.getElementById('build-input-path');
+        if (buildInputPath) buildInputPath.value = dlg.path;
         updateBuildButton();
     });
 
@@ -343,6 +345,12 @@ async function saveInventory(path) {
 
     // Автоматически выставляем сохранённый файл как путь для сборки
     document.getElementById('inventory-path').value = path;
+
+    const buildInputPath = document.getElementById('build-input-path');
+    if (buildInputPath) {
+        buildInputPath.value = path;
+    }
+
     updateBuildButton();
 
     return true;
@@ -398,9 +406,20 @@ function escapeAttr(value) {
 
 function setupBuildSection() {
     const pickVault = document.getElementById('pick-vault');
+    const pickBuildInput = document.getElementById('pick-build-input');
+    const buildInputPath = document.getElementById('build-input-path');
     const vaultInput = document.getElementById('vault-path');
     const buildBtn = document.getElementById('build-btn');
     const log = document.getElementById('build-log');
+
+    pickBuildInput.addEventListener('click', async () => {
+        const r = await window.pywebview.api.select_input_file();
+        if (r.ok) {
+            document.getElementById('inventory-path').value = r.path;
+            buildInputPath.value = r.path;
+            updateBuildButton();
+        }
+    });
 
     pickVault.addEventListener('click', async () => {
         const r = await window.pywebview.api.select_vault_folder();
@@ -413,13 +432,15 @@ function setupBuildSection() {
     buildBtn.addEventListener('click', async () => {
         const inventoryPath = document.getElementById('inventory-path').value;
         const vaultPath = vaultInput.value;
+        const inputFormat = document.getElementById('input-format').value;
 
         buildBtn.disabled = true;
         log.textContent = 'Запуск...\n';
 
         const r = await window.pywebview.api.build_vault(
-            inventoryPath, vaultPath, null
+            inventoryPath, vaultPath, null, inputFormat
         );
+
         if (!r.ok) {
             log.textContent += 'Ошибка: ' + r.error;
             buildBtn.disabled = false;
@@ -429,6 +450,7 @@ function setupBuildSection() {
         const interval = setInterval(async () => {
             const p = await window.pywebview.api.get_build_progress();
             log.textContent = p.messages.join('\n');
+
             if (!p.running) {
                 clearInterval(interval);
                 buildBtn.disabled = false;

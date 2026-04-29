@@ -1,15 +1,21 @@
 """
 Точка входа NVD Vault.
 
-Запуск: python app.py
+Запуск GUI:
+    python app.py
+    nvd-vault
+
+Запуск CLI:
+    nvd-vault build examples/sample_inventory.json --out vault/
 """
 
+import argparse
+import os
 import sys
 from pathlib import Path
 
-import webview
-
-from nvd_vault.api.bridge import Api
+from nvd_vault.core.inventory import load_inventory
+from nvd_vault.core.vault_builder import VaultBuilder
 
 
 def setup_windows_app_id() -> None:
@@ -23,15 +29,18 @@ def setup_windows_app_id() -> None:
     try:
         import ctypes
 
-        # Уникальный ID приложения. Должен быть уникальным -- иначе Windows
-        # сгруппирует наше окно с другими приложениями того же ID.
         app_id = "MortalYar.NvdVault.Desktop.1"
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
     except Exception as e:
         print(f"[warn] не удалось установить AppUserModelID: {e}")
 
 
-def main() -> None:
+def run_gui() -> None:
+    """Запустить desktop-интерфейс."""
+    import webview
+
+    from nvd_vault.api.bridge import Api
+
     setup_windows_app_id()
 
     api = Api()
@@ -52,5 +61,85 @@ def main() -> None:
     )
 
 
+def run_build_command(args: argparse.Namespace) -> int:
+    """Собрать vault из inventory.json в CLI-режиме."""
+    inventory_path = Path(args.inventory).expanduser().resolve()
+
+    output_path = args.out
+    if not output_path:
+        output_path = input("Введите путь для сохранения vault: ").strip()
+
+    vault_path = Path(output_path).expanduser().resolve()
+    api_key = args.api_key or os.getenv("NVD_API_KEY")
+
+    try:
+        inventory = load_inventory(inventory_path)
+    except (FileNotFoundError, ValueError) as e:
+        print(f"[error] {e}", file=sys.stderr)
+        return 1
+
+    def show_progress(message: str) -> None:
+        print(message, flush=True)
+
+    try:
+        builder = VaultBuilder(
+            vault_path=vault_path,
+            api_key=api_key,
+            progress_callback=show_progress,
+        )
+        meta = builder.build(inventory)
+    except Exception as e:
+        print(f"[error] Не удалось собрать vault: {e}", file=sys.stderr)
+        return 1
+
+    print()
+    print("Vault собран успешно:")
+    print(f"  Путь: {vault_path}")
+    print(f"  Products: {meta['products_count']}")
+    print(f"  CVEs: {meta['cves_count']}")
+    print(f"  CWEs: {meta['cwes_count']}")
+    return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="nvd-vault",
+        description="Build and browse a local vulnerability knowledge vault.",
+    )
+    subparsers = parser.add_subparsers(dest="command")
+
+    build = subparsers.add_parser(
+        "build",
+        help="Build vault from inventory.json without opening the GUI.",
+    )
+    build.add_argument(
+        "inventory",
+        help="Path to inventory.json.",
+    )
+    build.add_argument(
+        "--out",
+        required=False,
+        help="Output folder for generated vault.",
+    )
+    build.add_argument(
+        "--api-key",
+        default=None,
+        help="NVD API key. If omitted, NVD_API_KEY environment variable is used.",
+    )
+
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    if args.command == "build":
+        return run_build_command(args)
+
+    run_gui()
+    return 0
+
+
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

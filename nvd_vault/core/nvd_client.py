@@ -12,6 +12,8 @@ NVD_CVE_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 NVD_CPE_URL = "https://services.nvd.nist.gov/rest/json/cpes/2.0"
 RESULTS_PER_PAGE = 2000
 REQUEST_TIMEOUT = 30
+REQUEST_RETRIES = 3
+RETRY_SLEEP = 3
 RATE_LIMIT_SLEEP = 6.5  # без API-ключа: 5 запросов / 30 секунд
 
 
@@ -29,25 +31,52 @@ class NvdClient:
         time.sleep(0.7 if self.api_key else RATE_LIMIT_SLEEP)
 
     def _request(self, url: str, params: dict) -> dict:
-        try:
-            r = self.session.get(url, params=params, timeout=REQUEST_TIMEOUT)
-        except requests.RequestException as e:
-            raise RuntimeError(f"Ошибка сети: {e}") from e
+        last_error: requests.RequestException | None = None
 
-        if r.status_code == 404 and not r.text.strip():
-            raise RuntimeError(
-                "NVD вернул 404 с пустым телом. "
-                "Возможные причины: API-ключ не активирован, либо запрос некорректен."
-            )
-        if r.status_code == 403:
-            raise RuntimeError(
-                "NVD: 403 (rate limit). "
-                "Получи API-ключ: https://nvd.nist.gov/developers/request-an-api-key"
-            )
-        if r.status_code == 404:
-            return {"vulnerabilities": [], "totalResults": 0, "products": []}
-        r.raise_for_status()
-        return r.json()
+        for attempt in range(1, REQUEST_RETRIES + 1):
+            try:
+                r = self.session.get(url, params=params, timeout=REQUEST_TIMEOUT)
+            except requests.RequestException as e:
+                last_error = e
+
+                if attempt < REQUEST_RETRIES:
+                    time.sleep(RETRY_SLEEP * attempt)
+                    continue
+
+                raise RuntimeError(
+                    f"Ошибка сети после {REQUEST_RETRIES} попыток: {last_error}"
+                ) from e
+
+            if r.status_code == 404 and not r.text.strip():
+                raise RuntimeError(
+                    "NVD вернул 404 с пустым телом. "
+                    "Возможные причины: API-ключ не активирован, либо запрос некорректен."
+                )
+
+            if r.status_code == 403:
+                raise RuntimeError(
+                    "NVD: 403 (rate limit). "
+                    "Получи API-ключ: https://nvd.nist.gov/developers/request-an-api-key"
+                )
+
+            if r.status_code == 404:
+                return {"vulnerabilities": [], "totalResults": 0, "products": []}
+
+            try:
+                r.raise_for_status()
+                return r.json()
+            except requests.RequestException as e:
+                last_error = e
+
+                if attempt < REQUEST_RETRIES:
+                    time.sleep(RETRY_SLEEP * attempt)
+                    continue
+
+                raise RuntimeError(
+                    f"NVD API error после {REQUEST_RETRIES} попыток: {last_error}"
+                ) from e
+
+        raise RuntimeError("NVD API error: неизвестная ошибка")
 
     def discover_vendors(self, product: str) -> list[str]:
         """Список vendor'ов для продукта из CPE Dictionary."""

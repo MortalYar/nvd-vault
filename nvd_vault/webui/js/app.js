@@ -131,6 +131,7 @@ function escapeHtml(str) {
 // ---------- Tab 2: сборка vault + inventory editor ----------
 
 let currentInventoryPath = null;
+let buildInputPreviewOk = false;
 
 function setupVaultTab() {
     setupInventoryEditor();
@@ -479,7 +480,9 @@ function setupBuildSection() {
 function updateBuildButton() {
     const inv = document.getElementById('inventory-path').value;
     const vault = document.getElementById('vault-path').value;
-    document.getElementById('build-btn').disabled = !(inv && vault);
+
+    document.getElementById('build-btn').disabled =
+        !(inv && vault && buildInputPreviewOk);
 }
 
 async function updateBuildInputPreview() {
@@ -488,20 +491,24 @@ async function updateBuildInputPreview() {
     const preview = document.getElementById('build-input-preview');
 
     if (!inputPath) {
+        buildInputPreviewOk = false;
         preview.style.display = 'none';
         preview.innerHTML = '';
+        updateBuildButton();
         return;
     }
 
     const r = await window.pywebview.api.preview_build_input(inputPath, inputFormat);
 
     if (!r.ok) {
+        buildInputPreviewOk = false;
         preview.style.display = 'block';
         preview.className = 'v-input-preview v-input-preview-error';
         preview.innerHTML = `
             <div class="v-input-preview-title">Input preview</div>
             <div class="v-input-preview-error-text">Ошибка: ${escapeHtml(r.error)}</div>
         `;
+        updateBuildButton();
         return;
     }
 
@@ -546,6 +553,9 @@ async function updateBuildInputPreview() {
             ${more}
         </ul>
     `;
+
+    buildInputPreviewOk = true;
+    updateBuildButton();
 }
 
 function guessInputFormat(path) {

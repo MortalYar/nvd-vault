@@ -283,36 +283,57 @@
         </section>
 
         <section id="tab-browse" class="tab-content">
-            <div class="vault-toolbar">
-                <button id="open-vault-btn">Открыть Vault...</button>
-                <button id="export-btn" disabled>Экспорт в ZIP</button>
-                <span id="vault-meta"></span>
+            <div class="v-page-header">
+                <div>
+                    <h1>Просмотр Vault</h1>
+                    <p class="v-page-subtitle">
+                        Навигация по собранному vault: продукты, CVE, типы слабостей.
+                        Клик по wiki-ссылке внутри заметки переходит к связанному документу.
+                    </p>
+                </div>
             </div>
 
-            <div class="search-bar" id="search-bar" style="display:none;">
-                <input type="text" id="search-input"
+            <div class="v-vault-toolbar">
+                <button id="open-vault-btn" class="v-btn-primary">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">folder_open</span>
+                    Открыть Vault
+                </button>
+                <button id="export-btn" class="v-btn-secondary" disabled>
+                    <span class="material-symbols-outlined" style="font-size: 16px;">archive</span>
+                    Экспорт ZIP
+                </button>
+                <span id="vault-meta" class="v-vault-meta-info"></span>
+            </div>
+
+            <div class="v-search-bar" id="search-bar" style="display:none;">
+                <input type="text" class="v-input" id="search-input"
                        placeholder="Поиск по содержимому (минимум 2 символа)...">
-                <button id="search-clear" title="Очистить">×</button>
+                <button id="search-clear" class="v-search-clear" title="Очистить">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+                </button>
             </div>
 
-            <div id="search-results" class="search-results"></div>
+            <div id="search-results" class="v-search-results"></div>
 
-            <div class="vault-browser" id="vault-browser" style="display:none;">
-                <aside class="sidebar">
-                    <input type="text" id="filter-input" placeholder="Фильтр по имени...">
-                    <div class="note-group">
-                        <h3>Продукты</h3>
+            <div class="v-vault-browser" id="vault-browser" style="display:none;">
+                <aside class="v-sidebar">
+                    <input type="text" class="v-input" id="filter-input" placeholder="Фильтр по имени...">
+
+                    <div class="v-note-group">
+                        <div class="v-note-group-header">
+                            <h3>Продукты</h3>
+                        </div>
                         <ul id="list-products"></ul>
                     </div>
 
-                    <div class="note-group">
-                        <div class="cve-group-header">
+                    <div class="v-note-group">
+                        <div class="v-note-group-header">
                             <h3>CVE</h3>
-                            <span id="cve-counter" class="cve-counter"></span>
+                            <span id="cve-counter" class="v-note-counter"></span>
                         </div>
 
-                        <div class="cve-controls">
-                            <select id="cve-sort" class="sort-select">
+                        <div class="v-cve-controls">
+                            <select id="cve-sort" class="v-sort-select">
                                 <option value="risk">По риску ↓</option>
                                 <option value="cvss">По CVSS ↓</option>
                                 <option value="epss">По EPSS ↓</option>
@@ -320,14 +341,14 @@
                                 <option value="name">По имени</option>
                             </select>
 
-                            <div class="cve-filters">
-                                <label class="cve-filter">
+                            <div class="v-cve-filters">
+                                <label class="v-cve-filter">
                                     <input type="checkbox" id="cve-filter-kev"> KEV
                                 </label>
-                                <label class="cve-filter">
+                                <label class="v-cve-filter">
                                     <input type="checkbox" id="cve-filter-critical"> Critical
                                 </label>
-                                <label class="cve-filter">
+                                <label class="v-cve-filter">
                                     <input type="checkbox" id="cve-filter-ransom"> Ransomware
                                 </label>
                             </div>
@@ -336,14 +357,17 @@
                         <ul id="list-cves"></ul>
                     </div>
 
-                    <div class="note-group">
-                        <h3>CWE</h3>
+                    <div class="v-note-group">
+                        <div class="v-note-group-header">
+                            <h3>CWE</h3>
+                        </div>
                         <ul id="list-cwes"></ul>
                     </div>
                 </aside>
-                <main class="note-view">
+
+                <main class="v-note-view">
                     <div id="note-content" class="markdown-body">
-                        <p class="hint">Выбери заметку слева.</p>
+                        <div class="v-empty">Выбери заметку слева.</div>
                     </div>
                 </main>
             </div>

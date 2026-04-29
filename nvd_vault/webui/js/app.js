@@ -752,7 +752,7 @@ function fillList(elementId, notes) {
         const isRansom = String(note.frontmatter?.ransomware || '').toLowerCase() === 'true';
         if (isKev || isRansom) {
             const icons = document.createElement('span');
-            icons.className = 'note-badges';
+            icons.className = 'v-note-badges';
             if (isKev) icons.textContent += '⚠';
             if (isRansom) icons.textContent += '🔒';
             li.appendChild(icons);

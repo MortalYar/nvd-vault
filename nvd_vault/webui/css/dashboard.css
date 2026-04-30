@@ -213,3 +213,92 @@
 .v-deadline-soon {
     color: var(--v-warning);
 }
+
+/* ---------- Remediation Planner ---------- */
+
+.v-remediation-card {
+    background: #0b1c30;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.v-remediation-card.is-open {
+    border-color: rgba(173, 198, 255, 0.25);
+}
+
+.v-remediation-main {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: inherit;
+    padding: 12px 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    cursor: pointer;
+    text-align: left;
+}
+
+.v-remediation-main:hover {
+    background: #1b2b3f;
+}
+
+.v-remediation-details {
+    border-top: 1px solid rgba(66, 71, 84, 0.55);
+    padding: 12px 14px 14px;
+    background: rgba(3, 20, 39, 0.35);
+}
+
+.v-remediation-details-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8c909f;
+    margin-bottom: 10px;
+}
+
+.v-remediation-cves {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.v-remediation-cve {
+    width: 100%;
+    border: 1px solid rgba(66, 71, 84, 0.55);
+    background: #031427;
+    border-radius: 10px;
+    padding: 9px 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    cursor: pointer;
+    text-align: left;
+}
+
+.v-remediation-cve:hover {
+    border-color: #adc6ff;
+    background: #102034;
+}
+
+.v-remediation-cve-id {
+    color: #adc6ff;
+    font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.v-remediation-cve-meta {
+    color: #8c909f;
+    font-size: 12px;
+    white-space: nowrap;
+}

@@ -12,6 +12,7 @@ from typing import Optional
 
 import webview
 
+from nvd_vault.core.remediation import build_remediation_plan
 from nvd_vault.core.sbom import load_sbom
 from nvd_vault.core.dashboard import build_dashboard
 from nvd_vault.core.enrichment import EnrichmentClient, compute_risk_score
@@ -280,6 +281,7 @@ class Api:
             return {"ok": False, "error": str(e)}
         except Exception as e:
             return {"ok": False, "error": f"Неожиданная ошибка: {e}"}
+        
 
     # ---------- Vault build ----------
 
@@ -667,9 +669,18 @@ class Api:
                 ],
             }
         except Exception as e:
-            return {"ok": False, "error": str(e)}    
+            return {"ok": False, "error": str(e)} 
 
-        
+    def get_remediation_plan_for_path(self, vault_path: str) -> dict:
+        path, status = _validate_vault_path(vault_path)
+        if not status["ok"]:
+            return status
+
+        try:
+            data = build_remediation_plan(path)
+            return {"ok": True, **data}
+        except Exception as e:
+            return {"ok": False, "error": f"Ошибка построения remediation plan: {e}"}  
 
 # ---------- Утилиты модуля ----------
 

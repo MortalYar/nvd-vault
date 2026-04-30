@@ -36,6 +36,7 @@ async function loadDashboard() {
     content.style.display = 'block';
 
     renderKpi(r.kpi);
+    await loadRemediationPlan();
     renderTierBars(r.tier_distribution);
     renderTopCves(r.top_cves);
     renderTopProducts(r.top_products);
@@ -111,6 +112,77 @@ function vKpi(label, value, type, sub, progress, progressType) {
             <div class="v-kpi-sub">${escapeHtml(sub || '')}</div>
         </div>
     `;
+}
+
+function renderRemediationPlan(items) {
+    const container = document.getElementById('remediation-plan');
+
+    if (!items.length) {
+        container.innerHTML = '<div class="v-empty">Нет данных</div>';
+        return;
+    }
+
+    container.innerHTML = items.slice(0, 8).map((item, idx) => `
+        <div class="v-remediation-card">
+            <button class="v-remediation-main" data-remediation-index="${idx}">
+                <div class="v-row-main">
+                    <div class="v-row-name">
+                        #${idx + 1} ${escapeHtml(item.product)}
+                    </div>
+
+                    <div class="v-row-meta">
+                        ${item.cves_count} CVE ·
+                        ${item.critical_now} active exploit ·
+                        ${item.kev_count} KEV
+                    </div>
+
+                    <div class="v-row-meta">
+                        ${escapeHtml(item.recommendation)}
+                    </div>
+                </div>
+
+                <span class="v-row-score">
+                    ${item.remediation_score.toFixed(0)}
+                </span>
+            </button>
+
+            <div class="v-remediation-details" style="display:none;">
+                <div class="v-remediation-details-title">Top blocking CVEs</div>
+
+                <div class="v-remediation-cves">
+                    ${item.top_cves.map(cve => `
+                        <button class="v-remediation-cve" data-path="${escapeHtml(cve.relative_path)}">
+                            <span class="v-remediation-cve-id">${escapeHtml(cve.cve_id)}</span>
+                            <span class="v-remediation-cve-meta">
+                                ${escapeHtml(cve.risk_tier)} · risk ${cve.risk_score.toFixed(1)} · CVSS ${cve.cvss.toFixed(1)}
+                            </span>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    container.querySelectorAll('.v-remediation-main').forEach(button => {
+        button.addEventListener('click', () => {
+            const card = button.closest('.v-remediation-card');
+            const details = card.querySelector('.v-remediation-details');
+
+            const isOpen = details.style.display !== 'none';
+            details.style.display = isOpen ? 'none' : 'block';
+            card.classList.toggle('is-open', !isOpen);
+        });
+    });
+
+    container.querySelectorAll('.v-remediation-cve').forEach(button => {
+        button.addEventListener('click', () => {
+            const path = button.dataset.path;
+            if (!path) return;
+
+            document.querySelector('.tab[data-tab="browse"]')?.click();
+            openNote(path, null);
+        });
+    });
 }
 
 function kpiCard(label, value, type, sub) {
@@ -305,4 +377,21 @@ function bindTopItemClicks(container) {
             });
         });
     });
+}
+
+async function loadRemediationPlan() {
+    const container = document.getElementById('remediation-plan');
+    if (!container) return;
+
+    const r = await window.pywebview.api.get_remediation_plan_for_path(
+        AppState.currentVaultPath
+    );
+
+    if (!r.ok) {
+        container.innerHTML =
+            `<div class="v-empty">Ошибка remediation: ${escapeHtml(r.error)}</div>`;
+        return;
+    }
+
+    renderRemediationPlan(r.items);
 }

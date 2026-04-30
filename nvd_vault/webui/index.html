@@ -66,10 +66,11 @@
 
         <div class="tabs">
             <button class="tab" data-tab="dashboard">Дашборд</button>
-            <button class="tab active" data-tab="scan">Быстрое сканирование</button>
-            <button class="tab" data-tab="vault">Сборка Vault</button>
+            <button class="tab" data-tab="remediation">План патчинга</button>
             <button class="tab" data-tab="browse">Просмотр Vault</button>
             <button class="tab" data-tab="graph">Граф связей</button>
+            <button class="tab" data-tab="vault">Сборка Vault</button>
+            <button class="tab active" data-tab="scan">Быстрое сканирование</button>
         </div>
 
         <section id="tab-dashboard" class="tab-content v-page">
@@ -97,21 +98,7 @@
             <div id="dashboard-content" style="display:none;">
                 <!-- KPI cards -->
                 <div class="v-kpi-grid" id="kpi-grid"></div>
-
-                <div class="v-section">
-                    <div class="v-section-header">
-                        <h2>Patch Priority Queue</h2>
-                        <span class="v-section-link">рекомендуемый порядок патчинга</span>
-                    </div>
-                    <label class="v-remediation-toggle">
-                        <input type="checkbox" id="remediation-immediate-only">
-                        <span>Показать только срочные</span>
-                    </label>
-                    <div id="remediation-summary" class="v-remediation-summary"></div>
-                    <div id="remediation-plan" class="v-list"></div>
-                </div>
-
-                <!-- Tier distribution -->
+<!-- Tier distribution -->
                 <div class="v-section">
                     <div class="v-section-header">
                         <h2>Распределение по приоритету</h2>
@@ -163,6 +150,42 @@
                     </div>
                     <div class="v-list" id="ransomware-list"></div>
                 </div>
+            </div>
+        </section>
+
+        <section id="tab-remediation" class="tab-content v-page">
+            <div class="v-page-header">
+                <div>
+                    <h1>План патчинга</h1>
+                    <p class="v-page-subtitle">
+                        Приоритизация обновлений по продуктам на основе совокупного снижения риска.
+                    </p>
+                </div>
+                <div class="v-toolbar" style="margin-bottom: 0;">
+                    <button id="remediation-load-btn" class="v-btn-primary">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">refresh</span>
+                        Обновить
+                    </button>
+                </div>
+            </div>
+
+            <div id="remediation-status" class="v-status-text" style="margin-bottom: 16px;">
+                Откройте vault во вкладке «Просмотр Vault», затем нажмите «Обновить».
+            </div>
+
+            <div class="v-section">
+                <div class="v-section-header">
+                    <h2>Очередь патчинга</h2>
+                    <span class="v-section-link">приоритет обновления продуктов</span>
+                </div>
+
+                <label class="v-remediation-toggle">
+                    <input type="checkbox" id="remediation-immediate-only">
+                    <span>Показать только срочные</span>
+                </label>
+
+                <div id="remediation-summary" class="v-remediation-summary"></div>
+                <div id="remediation-plan" class="v-list"></div>
             </div>
         </section>
 

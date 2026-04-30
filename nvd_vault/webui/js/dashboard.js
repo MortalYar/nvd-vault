@@ -38,7 +38,6 @@ async function loadDashboard() {
     content.style.display = 'block';
 
     renderKpi(r.kpi);
-    await loadRemediationPlan();
     renderTierBars(r.tier_distribution);
     renderTopCves(r.top_cves);
     renderTopProducts(r.top_products);
@@ -143,14 +142,14 @@ function renderRemediationPlan(items) {
                     </div>
 
                     <div class="v-remediation-impact">
-                        Closes ${item.risk_reduction_percent.toFixed(1)}% of total vault risk
+                        Снижает совокупный риск vault на ${item.risk_reduction_percent.toFixed(1)}%
                     </div>
 
                     <div class="v-remediation-breakdown">
-                        <span class="v-remediation-pill is-critical-now">${item.critical_now} active</span>
-                        <span class="v-remediation-pill is-critical">${item.critical_likely} critical</span>
-                        <span class="v-remediation-pill is-high">${item.high} high</span>
-                        <span class="v-remediation-pill is-medium">${item.medium} medium</span>
+                        <span class="v-remediation-pill is-critical-now">${item.critical_now} эксплуат.</span>
+                        <span class="v-remediation-pill is-critical">${item.critical_likely} критич.</span>
+                        <span class="v-remediation-pill is-high">${item.high} высок.</span>
+                        <span class="v-remediation-pill is-medium">${item.medium} средн.</span>
                     </div>
                 </div>
 
@@ -161,9 +160,9 @@ function renderRemediationPlan(items) {
 
             <div class="v-remediation-details" style="display:none;">
                 <button class="v-remediation-open-product" data-product="${escapeHtml(item.product)}">
-                    Open product note
+                    Открыть карточку продукта
                 </button>
-                <div class="v-remediation-details-title">Top blocking CVEs</div>
+                <div class="v-remediation-details-title">Ключевые блокирующие CVE</div>
 
                 <div class="v-remediation-cves">
                     ${item.top_cves.map(cve => `
@@ -461,4 +460,30 @@ function getFilteredRemediationItems() {
     }
 
     return remediationItemsCache;
+}
+
+function setupRemediationTab() {
+    const loadBtn = document.getElementById('remediation-load-btn');
+    if (!loadBtn) return;
+
+    loadBtn.addEventListener('click', loadRemediationPage);
+    setupRemediationFilters();
+}
+
+async function loadRemediationPage() {
+    const status = document.getElementById('remediation-status');
+    const loadBtn = document.getElementById('remediation-load-btn');
+
+    if (!AppState.hasVault()) {
+        status.textContent = 'Сначала открой vault во вкладке «Просмотр Vault».';
+        return;
+    }
+
+    loadBtn.disabled = true;
+    status.textContent = 'Загружаю план патчинга...';
+
+    await loadRemediationPlan();
+
+    loadBtn.disabled = false;
+    status.textContent = 'План патчинга обновлён.';
 }

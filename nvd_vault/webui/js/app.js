@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupBrowseTab();
     setupGraphTab();
     setupDashboardTab();
+    setupRemediationTab();
 });
 
 // ---------- Табы ----------

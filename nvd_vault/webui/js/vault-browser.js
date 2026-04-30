@@ -327,6 +327,21 @@ async function openNote(relativePath, listItem) {
         return;
     }
 
+    const noteHeader = document.getElementById('note-header');
+    const noteHeaderTitle = document.getElementById('note-header-title');
+    const noteHeaderPath = document.getElementById('note-header-path');
+
+    if (noteHeader && noteHeaderTitle && noteHeaderPath) {
+        noteHeader.style.display = 'block';
+        noteHeaderTitle.textContent = r.name;
+        noteHeaderPath.textContent = relativePath;
+    }
+
+    const noteView = document.querySelector('.v-note-view');
+    if (noteView) {
+        noteView.scrollTop = 0;
+    }
+
     // Помечаем активный элемент
     document.querySelectorAll('.note-group li').forEach(li => li.classList.remove('active'));
     if (listItem) listItem.classList.add('active');

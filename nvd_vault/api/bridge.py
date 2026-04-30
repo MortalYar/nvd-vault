@@ -41,6 +41,37 @@ def _load_build_input(path: Path, input_format: str):
 
     raise ValueError(f"Неизвестный формат входного файла: {input_format}")
 
+def _validate_vault_path(vault_path: str) -> tuple[Path, dict]:
+    path = Path(vault_path)
+
+    if not path.exists() or not path.is_dir():
+        return path, {"ok": False, "error": "Папка не существует"}
+
+    meta_file = path / "meta.json"
+    if not meta_file.exists():
+        return path, {"ok": False, "error": "Это не похоже на vault (нет meta.json)"}
+
+    return path, {"ok": True}
+
+
+def _load_vault_meta(path: Path) -> dict:
+    meta_file = path / "meta.json"
+    return json.loads(meta_file.read_text(encoding="utf-8"))
+
+
+def _safe_note_path(vault_path: Path, relative_path: str) -> Path:
+    target = (vault_path / relative_path).resolve()
+
+    try:
+        target.relative_to(vault_path.resolve())
+    except ValueError:
+        raise ValueError("Недопустимый путь")
+
+    if not target.exists() or not target.is_file():
+        raise FileNotFoundError("Файл не найден")
+
+    return target
+
 class Api:
     def __init__(self) -> None:
         self._progress_log: list[str] = []
@@ -320,6 +351,118 @@ class Api:
             meta["index_error"] = str(e)
 
         return {"ok": True, "meta": meta, "path": str(path)}
+
+    def load_vault_meta(self, vault_path: str) -> dict:
+        path, status = _validate_vault_path(vault_path)
+        if not status["ok"]:
+            return status
+
+        try:
+            meta = _load_vault_meta(path)
+            return {"ok": True, "meta": meta, "path": str(path)}
+        except Exception as e:
+            return {"ok": False, "error": f"Не удалось прочитать meta.json: {e}"}
+
+
+    def list_vault_notes_for_path(self, vault_path: str) -> dict:
+        path, status = _validate_vault_path(vault_path)
+        if not status["ok"]:
+            return status
+
+        result: dict[str, list[dict]] = {"products": [], "cves": [], "cwes": []}
+
+        for subfolder in ("products", "cves", "cwes"):
+            folder = path / subfolder
+            if not folder.exists():
+                continue
+
+            for f in sorted(folder.glob("*.md")):
+                fm = _read_frontmatter(f)
+                result[subfolder].append({
+                    "name": f.stem,
+                    "path": f.name,
+                    "frontmatter": fm,
+                })
+
+        return {"ok": True, "notes": result}
+
+
+    def read_note_for_path(self, vault_path: str, relative_path: str) -> dict:
+        path, status = _validate_vault_path(vault_path)
+        if not status["ok"]:
+            return status
+
+        try:
+            target = _safe_note_path(path, relative_path)
+            content = target.read_text(encoding="utf-8")
+            return {
+                "ok": True,
+                "path": relative_path,
+                "name": target.stem,
+                "content": content,
+                "frontmatter": _parse_frontmatter_block(content)[0],
+            }
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
+
+
+    def resolve_wikilink_for_path(self, vault_path: str, link: str) -> dict:
+        path, status = _validate_vault_path(vault_path)
+        if not status["ok"]:
+            return status
+
+        for subfolder in ("products", "cves", "cwes"):
+            candidate = path / subfolder / f"{link}.md"
+            if candidate.exists():
+                return {
+                    "ok": True,
+                    "found": True,
+                    "relative_path": f"{subfolder}/{candidate.name}",
+                }
+
+        return {"ok": True, "found": False}
+
+
+    def search_vault_for_path(self, vault_path: str, query: str) -> dict:
+        path, status = _validate_vault_path(vault_path)
+        if not status["ok"]:
+            return status
+
+        query = (query or "").strip()
+        if len(query) < 2:
+            return {"ok": True, "results": [], "query": query}
+
+        index = SearchIndex()
+        try:
+            index.build(path)
+            results = index.search(query, limit=50)
+            return {"ok": True, "results": results, "query": query}
+        finally:
+            index.close()
+
+
+    def get_dashboard_for_path(self, vault_path: str) -> dict:
+        path, status = _validate_vault_path(vault_path)
+        if not status["ok"]:
+            return status
+
+        try:
+            data = build_dashboard(path)
+            return {"ok": True, **data}
+        except Exception as e:
+            return {"ok": False, "error": f"Ошибка сборки дашборда: {e}"}
+
+
+    def get_graph_data_for_path(self, vault_path: str) -> dict:
+        path, status = _validate_vault_path(vault_path)
+        if not status["ok"]:
+            return status
+
+        try:
+            data = build_graph(path)
+            return {"ok": True, **data}
+        except Exception as e:
+            return {"ok": False, "error": f"Ошибка сборки графа: {e}"}
 
     def list_vault_notes(self) -> dict:
         """Вернуть список всех заметок vault, сгруппированных по типу."""

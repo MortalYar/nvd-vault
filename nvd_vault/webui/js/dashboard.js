@@ -6,6 +6,13 @@ function setupDashboardTab() {
 }
 
 async function loadDashboard() {
+
+    if (!AppState.hasVault()) {
+        status.textContent = 'Сначала открой vault во вкладке «Просмотр Vault».';
+        content.style.display = 'none';
+        return;
+    }
+    
     const status = document.getElementById('dashboard-status');
     const content = document.getElementById('dashboard-content');
     const loadBtn = document.getElementById('dashboard-load-btn');

@@ -20,6 +20,8 @@ function setupBrowseTab() {
             meta.textContent = 'Ошибка: ' + r.error;
             return;
         }
+        
+        AppState.setVault(folder.path, r.meta);
 
         const indexed = r.meta.indexed_notes !== undefined
             ? `, проиндексировано ${r.meta.indexed_notes}` : '';

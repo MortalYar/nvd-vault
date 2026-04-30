@@ -1,8 +1,10 @@
 // ---------- Tab: дашборд ----------
+let remediationItemsCache = [];
 
 function setupDashboardTab() {
     const loadBtn = document.getElementById('dashboard-load-btn');
     loadBtn.addEventListener('click', loadDashboard);
+    setupRemediationFilters();
 }
 
 async function loadDashboard() {
@@ -435,6 +437,28 @@ async function loadRemediationPlan() {
         return;
     }
 
+    remediationItemsCache = r.items;
     renderRemediationSummary(r.summary, r.items);
-    renderRemediationPlan(r.items);
+    renderRemediationPlan(getFilteredRemediationItems());
+}
+
+function setupRemediationFilters() {
+    const immediateOnly = document.getElementById('remediation-immediate-only');
+    if (!immediateOnly) return;
+
+    immediateOnly.addEventListener('change', () => {
+        renderRemediationPlan(getFilteredRemediationItems());
+    });
+}
+
+function getFilteredRemediationItems() {
+    const immediateOnly = document.getElementById('remediation-immediate-only');
+
+    if (immediateOnly?.checked) {
+        return remediationItemsCache.filter(item =>
+            item.recommendation === 'Patch immediately'
+        );
+    }
+
+    return remediationItemsCache;
 }

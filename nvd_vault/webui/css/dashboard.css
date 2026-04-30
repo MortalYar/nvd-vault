@@ -1213,24 +1213,24 @@ input.v-input::placeholder,
 /* Vault browser layout: sidebar + main */
 .v-vault-browser {
     display: grid;
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 320px minmax(0, 1fr);
     gap: 0;
-    flex: 1;
-    min-height: 0;
-    background: #102034;
-    border: 1px solid #1b2b3f;
-    border-radius: 0.5rem;
+    height: calc(100vh - 280px);
+    min-height: 520px;
     overflow: hidden;
+    border: 1px solid var(--v-border, #424754);
+    border-radius: 12px;
+    background: var(--v-surface, #102034);
 }
 
 .v-sidebar {
-    background: #0b1c30;
-    border-right: 1px solid #1b2b3f;
+    height: 100%;
+    min-height: 0;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    padding: 14px;
-    gap: 14px;
+    overflow-x: hidden;
+    padding: 16px;
+    border-right: 1px solid var(--v-border, #424754);
+    background: var(--v-surface-low, #0b1c30);
 }
 
 .v-sidebar input.v-input {
@@ -1397,9 +1397,12 @@ input.v-input::placeholder,
 
 /* Main note view */
 .v-note-view {
-    background: #031427;
+    height: 100%;
+    min-height: 0;
     overflow-y: auto;
-    padding: 28px 36px;
+    overflow-x: hidden;
+    padding: 24px 28px;
+    background: var(--v-surface, #102034);
 }
 
 .v-note-view .v-empty {
@@ -1410,6 +1413,11 @@ input.v-input::placeholder,
 }
 
 /* Markdown body — переопределяем под новую палитру */
+
+.markdown-body {
+    max-width: 960px;
+}
+
 .v-note-view .markdown-body h1 {
     color: #d3e4fe;
     font-family: "Manrope", sans-serif;

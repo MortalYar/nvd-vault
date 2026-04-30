@@ -135,7 +135,15 @@ function setupGraphTab() {
         loadBtn.disabled = true;
         loadBtn.textContent = 'Загружаю...';
 
-        const r = await window.pywebview.api.get_graph_data();
+        if (!AppState.hasVault()) {
+            stats.textContent = 'Сначала открой vault во вкладке «Просмотр Vault».';
+            loadBtn.disabled = false;
+            loadBtn.textContent = 'Построить';
+            return;
+        }
+
+        const r = await window.pywebview.api.get_graph_data_for_path(AppState.currentVaultPath);
+
         loadBtn.disabled = false;
         loadBtn.textContent = 'Перестроить граф';
 

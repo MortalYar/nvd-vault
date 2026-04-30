@@ -3,11 +3,7 @@
 #tab-dashboard {
     font-family: "Inter", sans-serif;
     color: #d3e4fe;
-    margin: -2rem;
-    margin-top: 0;
-    padding: 1.5rem 2rem 3rem;
     background: #031427;
-    min-height: calc(100vh - 100px);
 }
 
 #tab-dashboard h1,
@@ -379,11 +375,7 @@
 #tab-scan {
     font-family: "Inter", sans-serif;
     color: #d3e4fe;
-    margin: -2rem;
-    margin-top: 0;
-    padding: 1.5rem 2rem 3rem;
     background: #031427;
-    min-height: calc(100vh - 100px);
 }
 
 #tab-scan h1, #tab-scan h2, #tab-scan h3 {
@@ -550,11 +542,7 @@ input.v-input::placeholder,
 #tab-graph {
     font-family: "Inter", sans-serif;
     color: #d3e4fe;
-    margin: -2rem;
-    margin-top: 0;
-    padding: 1.5rem 2rem 3rem;
     background: #031427;
-    min-height: calc(100vh - 100px);
 }
 
 #tab-graph h1, #tab-graph h2 {
@@ -687,11 +675,7 @@ input.v-input::placeholder,
 #tab-vault {
     font-family: "Inter", sans-serif;
     color: #d3e4fe;
-    margin: -2rem;
-    margin-top: 0;
-    padding: 1.5rem 2rem 3rem;
     background: #031427;
-    min-height: calc(100vh - 100px);
 }
 
 #tab-vault h1, #tab-vault h2, #tab-vault h3 {
@@ -1097,13 +1081,7 @@ input.v-input::placeholder,
 #tab-browse {
     font-family: "Inter", sans-serif;
     color: #d3e4fe;
-    margin: -2rem;
-    margin-top: 0;
-    padding: 1.5rem 2rem 2rem;
     background: #031427;
-    min-height: calc(100vh - 100px);
-    display: flex;
-    flex-direction: column;
 }
 
 #tab-browse h1, #tab-browse h2, #tab-browse h3 {

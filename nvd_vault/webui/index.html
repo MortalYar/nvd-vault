@@ -70,7 +70,7 @@
             <button class="tab" data-tab="graph">Граф связей</button>
         </div>
 
-        <section id="tab-dashboard" class="tab-content">
+        <section id="tab-dashboard" class="tab-content v-page">
             <!-- Header -->
             <div class="v-page-header">
                 <div>
@@ -151,7 +151,7 @@
             </div>
         </section>
 
-        <section id="tab-scan" class="tab-content active">
+        <section id="tab-scan" class="tab-content v-page active">
             <div class="v-page-header">
                 <div>
                     <h1>Быстрое сканирование</h1>
@@ -189,7 +189,7 @@
             <div id="scan-results"></div>
         </section>
 
-        <section id="tab-vault" class="tab-content">
+        <section id="tab-vault" class="tab-content v-page">
             <div class="v-page-header">
                 <div>
                     <h1>Сборка Vault</h1>
@@ -203,7 +203,7 @@
             <!-- Inventory editor -->
             <div class="v-section">
                 <div class="v-section-with-actions">
-                    <h2>Inventory editor</h2>
+                    <h2>Inventory</h2>
                     <div class="v-section-actions">
                         <button id="inv-new-btn" class="v-btn-secondary">
                             <span class="material-symbols-outlined" style="font-size: 16px;">add</span>
@@ -222,10 +222,6 @@
                             Сохранить как
                         </button>
                     </div>
-                    <p class="v-page-subtitle" style="margin-top: 8px;">
-                        Этот блок нужен для ручного создания и редактирования inventory.json.
-                        Для импорта CycloneDX/SPDX SBOM используй нижний блок «Сборка».
-                    </p>
                 </div>
 
                 <div class="v-vault-meta">
@@ -266,11 +262,11 @@
 
                 <div class="v-build-form">
                     <div class="v-field">
-                        <label class="v-field-label" for="build-input-path">Входной файл</label>
+                        <label class="v-field-label" for="vault-path">Папка для vault</label>
                         <div class="v-file-row">
-                            <input type="text" class="v-input" id="build-input-path" readonly placeholder="inventory.json или SBOM JSON не выбран">
-                            <button id="pick-build-input" class="v-btn-secondary">
-                                <span class="material-symbols-outlined" style="font-size: 16px;">folder_open</span>
+                            <input type="text" class="v-input" id="vault-path" readonly placeholder="не выбрана">
+                            <button id="pick-vault" class="v-btn-secondary">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">folder</span>
                                 Выбрать
                             </button>
                         </div>
@@ -283,43 +279,18 @@
                             <option value="sbom">SBOM JSON</option>
                         </select>
                     </div>
-                    <div class="v-field">
-                        <label class="v-field-label" for="vault-path">Папка для vault</label>
-                        <div class="v-file-row">
-                            <input type="text" class="v-input" id="vault-path" readonly placeholder="не выбрана">
-                            <button id="pick-vault" class="v-btn-secondary">
-                                <span class="material-symbols-outlined" style="font-size: 16px;">folder</span>
-                                Выбрать
-                            </button>
-                        </div>
-                    </div>
                     <input type="hidden" id="inventory-path">
-                    <div id="build-input-preview" class="v-input-preview" style="display:none;"></div>
                     <button id="build-btn" class="v-btn-primary" disabled>
                         <span class="material-symbols-outlined" style="font-size: 18px;">construction</span>
                         Собрать Vault
                     </button>
                 </div>
 
-                <div id="build-progress-card" class="v-build-progress-card" style="display:none;">
-                    <div class="v-build-progress-header">
-                        <div>
-                            <div id="build-progress-title" class="v-build-progress-title">Сборка vault</div>
-                            <div id="build-progress-subtitle" class="v-build-progress-subtitle">Ожидание...</div>
-                        </div>
-                        <span id="build-progress-badge" class="v-badge v-badge-info">READY</span>
-                    </div>
-
-                    <div class="v-build-progress-track">
-                        <div id="build-progress-bar" class="v-build-progress-bar"></div>
-                    </div>
-                </div>
-
                 <div id="build-log" class="v-build-log"></div>
             </div>
         </section>
 
-        <section id="tab-browse" class="tab-content">
+        <section id="tab-browse" class="tab-content v-page">
             <div class="v-page-header">
                 <div>
                     <h1>Просмотр Vault</h1>
@@ -410,7 +381,7 @@
             </div>
         </section>
 
-        <section id="tab-graph" class="tab-content">
+        <section id="tab-graph" class="tab-content v-page">
             <div class="v-page-header">
                 <div>
                     <h1>Граф связей</h1>

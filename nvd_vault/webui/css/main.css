@@ -214,6 +214,29 @@ button:disabled { background: #45475a; cursor: not-allowed; }
     overflow: hidden;
 }
 
+/* ---------- Vault Browser Sticky Controls ---------- */
+
+.v-search-bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--v-bg, #031427);
+    padding: 0 0 12px;
+    margin-bottom: 12px;
+}
+
+.v-sidebar {
+    position: relative;
+}
+
+.v-sidebar > .v-input:first-child {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--v-surface-low, #0b1c30) !important;
+    margin-bottom: 12px;
+}
+
 .sidebar {
     background: #313244;
     padding: 2rem;

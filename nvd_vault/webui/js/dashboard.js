@@ -158,6 +158,9 @@ function renderRemediationPlan(items) {
             </button>
 
             <div class="v-remediation-details" style="display:none;">
+                <button class="v-remediation-open-product" data-product="${escapeHtml(item.product)}">
+                    Open product note
+                </button>
                 <div class="v-remediation-details-title">Top blocking CVEs</div>
 
                 <div class="v-remediation-cves">
@@ -192,6 +195,16 @@ function renderRemediationPlan(items) {
 
             document.querySelector('.tab[data-tab="browse"]')?.click();
             openNote(path, null);
+        });
+    });
+
+    container.querySelectorAll('.v-remediation-open-product').forEach(button => {
+        button.addEventListener('click', () => {
+            const product = button.dataset.product;
+            if (!product) return;
+
+            document.querySelector('.tab[data-tab="browse"]')?.click();
+            openNote(`products/${product}.md`, null);
         });
     });
 }

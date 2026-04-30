@@ -360,3 +360,20 @@
 .v-remediation-pill.is-medium {
     color: #f9e2af;
 }
+
+.v-remediation-open-product {
+    margin-bottom: 12px;
+    border: 1px solid rgba(173, 198, 255, 0.25);
+    background: rgba(173, 198, 255, 0.08);
+    color: #adc6ff;
+    border-radius: 10px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.v-remediation-open-product:hover {
+    background: rgba(173, 198, 255, 0.14);
+    border-color: #adc6ff;
+}

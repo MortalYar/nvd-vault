@@ -120,12 +120,6 @@ function renderCves(container, cves) {
     }).join('');
 }
 
-function escapeHtml(str) {
-    const d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
-}
-
 // ---------- Tab 2: сборка vault ----------
 
 // ---------- Tab 2: сборка vault + inventory editor ----------
@@ -401,13 +395,6 @@ function confirmDiscardChanges() {
     return confirm('Несохранённые изменения будут потеряны. Продолжить?');
 }
 
-function escapeAttr(value) {
-    return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-}
 
 // ---------- Build section (нижняя часть вкладки) ----------
 
@@ -624,20 +611,6 @@ async function updateBuildInputPreview() {
     updateBuildButton();
 }
 
-function guessInputFormat(path) {
-    const lower = String(path || '').toLowerCase();
-
-    if (lower.includes('sbom') || lower.includes('cyclonedx') || lower.includes('spdx')) {
-        return 'sbom';
-    }
-
-    if (lower.includes('inventory')) {
-        return 'inventory';
-    }
-
-    return 'auto';
-}
-
 // ---------- Tab 3: просмотр vault ----------
 
 function setupBrowseTab() {
@@ -671,7 +644,6 @@ function setupBrowseTab() {
         exportBtn.disabled = false;
 
         await loadNotesList();
-        await loadDashboard();
     });
 
     exportBtn.addEventListener('click', async () => {
@@ -913,11 +885,6 @@ function sortCves(notes, mode) {
     }
 
     return arr;
-}
-
-function toBool(value) {
-    if (typeof value === 'boolean') return value;
-    return String(value).toLowerCase() === 'true';
 }
 
 function fillList(elementId, notes) {
@@ -1708,20 +1675,6 @@ function bindTopItemClicks(container) {
             });
         });
     });
-}
-
-/**
- * Русское склонение по числу.
- * plural(1, 'продукт', 'продукта', 'продуктов') -> 'продукт'
- * plural(2, 'продукт', 'продукта', 'продуктов') -> 'продукта'
- * plural(5, 'продукт', 'продукта', 'продуктов') -> 'продуктов'
- */
-function plural(n, one, few, many) {
-    const mod10 = n % 10;
-    const mod100 = n % 100;
-    if (mod10 === 1 && mod100 !== 11) return one;
-    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
-    return many;
 }
 /**
  * Показать модалку выбора vendor.

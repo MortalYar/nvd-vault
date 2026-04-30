@@ -262,6 +262,26 @@
 
                 <div class="v-build-form">
                     <div class="v-field">
+                        <label class="v-field-label" for="build-input-path">Входной файл</label>
+                        <div class="v-file-row">
+                            <input type="text" class="v-input" id="build-input-path" readonly placeholder="inventory.json или SBOM JSON не выбран">
+                            <button id="pick-build-input" class="v-btn-secondary">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">folder_open</span>
+                                Выбрать
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="v-field">
+                        <label class="v-field-label" for="input-format">Формат входного файла</label>
+                        <select class="v-input" id="input-format">
+                            <option value="auto">Auto</option>
+                            <option value="inventory">Inventory JSON</option>
+                            <option value="sbom">SBOM JSON</option>
+                        </select>
+                    </div>
+
+                    <div class="v-field">
                         <label class="v-field-label" for="vault-path">Папка для vault</label>
                         <div class="v-file-row">
                             <input type="text" class="v-input" id="vault-path" readonly placeholder="не выбрана">
@@ -271,19 +291,29 @@
                             </button>
                         </div>
                     </div>
-                    <div class="v-field">
-                        <label class="v-field-label" for="input-format">Формат входного файла</label>
-                        <select class="v-input" id="input-format">
-                            <option value="auto">Auto</option>
-                            <option value="inventory">Inventory JSON</option>
-                            <option value="sbom">SBOM JSON</option>
-                        </select>
-                    </div>
+
                     <input type="hidden" id="inventory-path">
+
+                    <div id="build-input-preview" class="v-input-preview" style="display:none;"></div>
+
                     <button id="build-btn" class="v-btn-primary" disabled>
                         <span class="material-symbols-outlined" style="font-size: 18px;">construction</span>
                         Собрать Vault
                     </button>
+                </div>
+
+                <div id="build-progress-card" class="v-build-progress-card" style="display:none;">
+                    <div class="v-build-progress-header">
+                        <div>
+                            <div id="build-progress-title" class="v-build-progress-title">Сборка vault</div>
+                            <div id="build-progress-subtitle" class="v-build-progress-subtitle">Ожидание...</div>
+                        </div>
+                        <span id="build-progress-badge" class="v-badge v-badge-info">READY</span>
+                    </div>
+
+                    <div class="v-build-progress-track">
+                        <div id="build-progress-bar" class="v-build-progress-bar"></div>
+                    </div>
                 </div>
 
                 <div id="build-log" class="v-build-log"></div>
@@ -443,6 +473,7 @@
         </div>
     </div>
 
+    <script src="js/utils.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

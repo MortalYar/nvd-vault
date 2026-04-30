@@ -143,6 +143,13 @@ function renderRemediationPlan(items) {
                     <div class="v-remediation-impact">
                         Closes ${item.risk_reduction_percent.toFixed(1)}% of total vault risk
                     </div>
+
+                    <div class="v-remediation-breakdown">
+                        <span class="v-remediation-pill is-critical-now">${item.critical_now} active</span>
+                        <span class="v-remediation-pill is-critical">${item.critical_likely} critical</span>
+                        <span class="v-remediation-pill is-high">${item.high} high</span>
+                        <span class="v-remediation-pill is-medium">${item.medium} medium</span>
+                    </div>
                 </div>
 
                 <span class="v-row-score">

@@ -7,15 +7,15 @@ function setupDashboardTab() {
 
 async function loadDashboard() {
 
+    const status = document.getElementById('dashboard-status');
+    const content = document.getElementById('dashboard-content');
+    const loadBtn = document.getElementById('dashboard-load-btn');
+
     if (!AppState.hasVault()) {
         status.textContent = 'Сначала открой vault во вкладке «Просмотр Vault».';
         content.style.display = 'none';
         return;
     }
-
-    const status = document.getElementById('dashboard-status');
-    const content = document.getElementById('dashboard-content');
-    const loadBtn = document.getElementById('dashboard-load-btn');
 
     loadBtn.disabled = true;
 
@@ -139,6 +139,10 @@ function renderRemediationPlan(items) {
                     <div class="v-row-meta">
                         ${escapeHtml(item.recommendation)}
                     </div>
+
+                    <div class="v-remediation-impact">
+                        Closes ${item.risk_reduction_percent.toFixed(1)}% of total vault risk
+                    </div>
                 </div>
 
                 <span class="v-row-score">
@@ -183,6 +187,24 @@ function renderRemediationPlan(items) {
             openNote(path, null);
         });
     });
+}
+
+function renderRemediationSummary(summary, items) {
+    const el = document.getElementById('remediation-summary');
+    if (!el) return;
+
+    const immediate = items.filter(i =>
+        i.recommendation === 'Patch immediately'
+    ).length;
+
+    const kev = items.reduce((sum, i) => sum + i.kev_count, 0);
+
+    el.innerHTML = `
+        <span>${summary.products} products</span>
+        <span>${summary.cves} CVE</span>
+        <span>${kev} KEV</span>
+        <span>${immediate} immediate</span>
+    `;
 }
 
 function kpiCard(label, value, type, sub) {
@@ -393,5 +415,6 @@ async function loadRemediationPlan() {
         return;
     }
 
+    renderRemediationSummary(r.summary, r.items);
     renderRemediationPlan(r.items);
 }

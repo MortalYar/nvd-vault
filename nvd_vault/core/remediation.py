@@ -120,6 +120,17 @@ def build_remediation_plan(vault_path: Path) -> dict:
         reverse=True,
     )
 
+    total_remediation_score = sum(item["remediation_score"] for item in items)
+
+    for item in items:
+        if total_remediation_score > 0:
+            item["risk_reduction_percent"] = round(
+                item["remediation_score"] / total_remediation_score * 100,
+                1,
+            )
+        else:
+            item["risk_reduction_percent"] = 0.0
+
     return {
         "summary": {
             "products": len(items),

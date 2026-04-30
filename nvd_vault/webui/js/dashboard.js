@@ -12,14 +12,14 @@ async function loadDashboard() {
         content.style.display = 'none';
         return;
     }
-    
+
     const status = document.getElementById('dashboard-status');
     const content = document.getElementById('dashboard-content');
     const loadBtn = document.getElementById('dashboard-load-btn');
 
     loadBtn.disabled = true;
 
-    const r = await window.pywebview.api.get_dashboard();
+    const r = await window.pywebview.api.get_dashboard_for_path(AppState.currentVaultPath);
 
     loadBtn.disabled = false;
 

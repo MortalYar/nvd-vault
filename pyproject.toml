@@ -27,14 +27,15 @@ nvd-vault = "app:main"
 
 [tool.setuptools]
 py-modules = ["app"]
-packages = ["nvd_vault", "nvd_vault.api", "nvd_vault.core"]
+packages = ["nvd_vault", "nvd_vault.api", "nvd_vault.core", "nvd_vault.webui"]
 
 [tool.setuptools.package-data]
-nvd_vault = [
-    "webui/index.html",
-    "webui/css/*.css",
-    "webui/js/*.js",
-    "webui/assets/*"
+"nvd_vault.webui" = [
+    "index.html",
+    "css/*.css",
+    "js/*.js",
+    "assets/*",
+    "vendor/*.js"
 ]
 
 [tool.pytest.ini_options]

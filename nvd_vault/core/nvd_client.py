@@ -16,7 +16,11 @@ RESULTS_PER_PAGE = 2000
 REQUEST_TIMEOUT = 30
 REQUEST_RETRIES = 3
 RETRY_SLEEP = 3
-RATE_LIMIT_SLEEP = 6.5  # без API-ключа: 5 запросов / 30 секунд
+# Минимальный интервал между запросами к NVD.
+# Без ключа: лимит 5 запросов / 30 сек -> минимум 6 сек/запрос (берём 6.5 для запаса).
+# С ключом: лимит 50 запросов / 30 сек -> минимум 0.6 сек/запрос (берём 0.7).
+MIN_INTERVAL_NO_KEY = 6.5
+MIN_INTERVAL_WITH_KEY = 0.7
 
 
 class NvdClient:
@@ -28,17 +32,28 @@ class NvdClient:
         self.api_key = api_key
         if api_key:
             self.session.headers["apiKey"] = api_key
+        self._min_interval = MIN_INTERVAL_WITH_KEY if api_key else MIN_INTERVAL_NO_KEY
+        self._last_request_at: float = 0.0
 
-    def _sleep(self) -> None:
-        time.sleep(0.7 if self.api_key else RATE_LIMIT_SLEEP)
+    def _throttle(self) -> None:
+            """Гарантирует минимальный интервал между запросами к NVD."""
+            if self._last_request_at == 0.0:
+                return
+            elapsed = time.monotonic() - self._last_request_at
+            wait = self._min_interval - elapsed
+            if wait > 0:
+                time.sleep(wait)
 
     def _request(self, url: str, params: dict) -> dict:
         last_error: requests.RequestException | None = None
 
         for attempt in range(1, REQUEST_RETRIES + 1):
+            self._throttle()
             try:
                 r = self.session.get(url, params=params, timeout=REQUEST_TIMEOUT)
+                self._last_request_at = time.monotonic()
             except requests.RequestException as e:
+                self._last_request_at = time.monotonic()
                 last_error = e
 
                 if attempt < REQUEST_RETRIES:
@@ -70,24 +85,48 @@ class NvdClient:
             if r.status_code == 404:
                 return {"vulnerabilities": [], "totalResults": 0, "products": []}
 
-            try:
-                r.raise_for_status()
-                return r.json()
-            except requests.RequestException as e:
-                last_error = e
-
+            # 429 Too Many Requests
+            if r.status_code == 429:
+                last_error = requests.HTTPError(f"HTTP 429 Too Many Requests")
                 if attempt < REQUEST_RETRIES:
                     logger.warning(
-                        "NVD request failed, retrying %s/%s: %s",
-                        attempt,
-                        REQUEST_RETRIES,
-                        e,
+                        "NVD: 429 Too Many Requests, retrying %s/%s",
+                        attempt, REQUEST_RETRIES,
+                    )
+                    time.sleep(RETRY_SLEEP * attempt * 2)
+                    continue
+                raise RuntimeError(
+                    f"NVD: 429 после {REQUEST_RETRIES} попыток. "
+                    "Превышен rate limit, попробуй позже или используй API-ключ."
+                ) from last_error
+
+            # Другие 4xx
+            if 400 <= r.status_code < 500:
+                raise RuntimeError(
+                    f"NVD API error: HTTP {r.status_code}. "
+                    f"Тело ответа: {r.text[:200]}"
+                )
+
+            # 5xx: серверная ошибка
+            if r.status_code >= 500:
+                last_error = requests.HTTPError(f"HTTP {r.status_code}")
+                if attempt < REQUEST_RETRIES:
+                    logger.warning(
+                        "NVD %s, retrying %s/%s",
+                        r.status_code, attempt, REQUEST_RETRIES,
                     )
                     time.sleep(RETRY_SLEEP * attempt)
                     continue
-
                 raise RuntimeError(
-                    f"NVD API error после {REQUEST_RETRIES} попыток: {last_error}"
+                    f"NVD API error: HTTP {r.status_code} после {REQUEST_RETRIES} попыток"
+                ) from last_error
+
+            # 2xx
+            try:
+                return r.json()
+            except ValueError as e:
+                raise RuntimeError(
+                    f"NVD вернул невалидный JSON: {e}"
                 ) from e
 
         raise RuntimeError("NVD API error: неизвестная ошибка")
@@ -124,11 +163,10 @@ class NvdClient:
                 if v:
                     results.append(v)
 
-            total = data.get("totalResults", 0)
+            total = data.get("totalResults", 0) or 0
             start_index += RESULTS_PER_PAGE
             if start_index >= total:
                 break
-            self._sleep()
 
         return results
 

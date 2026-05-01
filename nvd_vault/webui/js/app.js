@@ -143,7 +143,7 @@ function setupGraphTab() {
             return;
         }
 
-        const r = await window.pywebview.api.get_graph_data_for_path(AppState.currentVaultPath);
+        const r = await window.pywebview.api.get_graph_data();
 
         loadBtn.disabled = false;
         loadBtn.textContent = 'Перестроить граф';

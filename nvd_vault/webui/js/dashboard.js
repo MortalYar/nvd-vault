@@ -22,7 +22,7 @@ async function loadDashboard() {
 
     loadBtn.disabled = true;
 
-    const r = await window.pywebview.api.get_dashboard_for_path(AppState.currentVaultPath);
+    const r = await window.pywebview.api.get_dashboard();  
 
     loadBtn.disabled = false;
 
@@ -426,9 +426,7 @@ async function loadRemediationPlan() {
     const container = document.getElementById('remediation-plan');
     if (!container) return;
 
-    const r = await window.pywebview.api.get_remediation_plan_for_path(
-        AppState.currentVaultPath
-    );
+    const r = await window.pywebview.api.get_remediation_plan();
 
     if (!r.ok) {
         container.innerHTML =

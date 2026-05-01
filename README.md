@@ -4,7 +4,7 @@ Desktop-приложение для аудита уязвимостей по ope
 
 Принимает `inventory.json`, обращается к NVD, EPSS и CISA KEV, затем генерирует **vault** в формате связанных Markdown-заметок и предоставляет встроенный просмотрщик с поиском, графом связей и аналитическим дашбордом.
 
-![Python](https://img.shields.io/badge/python-3.13-blue)
+![Python](https://img.shields.io/badge/python-3.11+-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-windows-lightgrey)
 ![CI](https://github.com/MortalYar/nvd-vault/actions/workflows/tests.yml/badge.svg)
@@ -35,8 +35,8 @@ cd nvd-vault
 python -m pip install -e ".[dev]"
 ```
 
-> Requires Python 3.13.  
-> Python 3.14 is currently unsupported due to `pythonnet` dependency limitations.
+> Requires Python 3.11 or newer.  
+> Tested on Python 3.11, 3.12, 3.13.
 
 ---
 

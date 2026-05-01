@@ -1,5 +1,6 @@
 // ---------- Tab: дашборд ----------
 let remediationItemsCache = [];
+let selectedRemediationItem = null;
 
 function setupDashboardTab() {
     const loadBtn = document.getElementById('dashboard-load-btn');
@@ -117,95 +118,94 @@ function vKpi(label, value, type, sub, progress, progressType) {
 
 function renderRemediationPlan(items) {
     const container = document.getElementById('remediation-plan');
+    if (!container) return;
 
-    if (!items.length) {
-        container.innerHTML = '<div class="v-empty">Нет данных</div>';
-        return;
-    }
+    container.innerHTML = '';
 
-    container.innerHTML = items.slice(0, 8).map((item, idx) => `
-        <div class="v-remediation-card">
-            <button class="v-remediation-main" data-remediation-index="${idx}">
-                <div class="v-row-main">
-                    <div class="v-row-name">
-                        #${idx + 1} ${escapeHtml(item.product)}
-                    </div>
+    items.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'v-remediation-row';
 
-                    <div class="v-row-meta">
-                        ${item.cves_count} CVE ·
-                        ${item.critical_now} active exploit ·
-                        ${item.kev_count} KEV
-                    </div>
-
-                    <div class="v-row-meta">
-                        ${escapeHtml(item.recommendation)}
-                    </div>
-
-                    <div class="v-remediation-impact">
-                        Снижает совокупный риск vault на ${item.risk_reduction_percent.toFixed(1)}%
-                    </div>
-
-                    <div class="v-remediation-breakdown">
-                        <span class="v-remediation-pill is-critical-now">${item.critical_now} эксплуат.</span>
-                        <span class="v-remediation-pill is-critical">${item.critical_likely} критич.</span>
-                        <span class="v-remediation-pill is-high">${item.high} высок.</span>
-                        <span class="v-remediation-pill is-medium">${item.medium} средн.</span>
-                    </div>
-                </div>
-
-                <span class="v-row-score">
-                    ${item.remediation_score.toFixed(0)}
-                </span>
-            </button>
-
-            <div class="v-remediation-details" style="display:none;">
-                <button class="v-remediation-open-product" data-product="${escapeHtml(item.product)}">
-                    Открыть карточку продукта
-                </button>
-                <div class="v-remediation-details-title">Ключевые блокирующие CVE</div>
-
-                <div class="v-remediation-cves">
-                    ${item.top_cves.map(cve => `
-                        <button class="v-remediation-cve" data-path="${escapeHtml(cve.relative_path)}">
-                            <span class="v-remediation-cve-id">${escapeHtml(cve.cve_id)}</span>
-                            <span class="v-remediation-cve-meta">
-                                ${escapeHtml(cve.risk_tier)} · risk ${cve.risk_score.toFixed(1)} · CVSS ${cve.cvss.toFixed(1)}
-                            </span>
-                        </button>
-                    `).join('')}
-                </div>
+        el.innerHTML = `
+            <div class="v-remediation-row-title">
+                ${escapeHtml(item.product)}
             </div>
+
+            <div class="v-remediation-row-meta">
+                ${item.recommendation}
+            </div>
+
+            <div class="v-remediation-row-score">
+                ${item.remediation_score}
+            </div>
+        `;
+
+        el.addEventListener('click', () => {
+            selectedRemediationItem = item;
+            renderRemediationDetails(item);
+
+            document.querySelectorAll('.v-remediation-row')
+                .forEach(r => r.classList.remove('active'));
+            el.classList.add('active');
+        });
+
+        container.appendChild(el);
+    });
+
+    // авто-выбор первого элемента
+    if (items.length > 0) {
+        selectedRemediationItem = items[0];
+        renderRemediationDetails(items[0]);
+        container.firstChild?.classList.add('active');
+    }
+}
+
+function renderRemediationDetails(item) {
+    const panel = document.getElementById('remediation-details');
+    if (!panel) return;
+
+    panel.innerHTML = `
+        <h2 style="margin-bottom: 8px;">${escapeHtml(item.product)}</h2>
+
+        <div class="v-remediation-impact">
+            Снижает риск на ${item.risk_reduction_percent.toFixed(1)}%
         </div>
-    `).join('');
 
-    container.querySelectorAll('.v-remediation-main').forEach(button => {
-        button.addEventListener('click', () => {
-            const card = button.closest('.v-remediation-card');
-            const details = card.querySelector('.v-remediation-details');
+        <div class="v-remediation-breakdown">
+            <span class="v-remediation-pill is-critical-now">${item.critical_now} эксплуат.</span>
+            <span class="v-remediation-pill is-critical">${item.critical_likely} критич.</span>
+            <span class="v-remediation-pill is-high">${item.high} высок.</span>
+            <span class="v-remediation-pill is-medium">${item.medium} средн.</span>
+        </div>
 
-            const isOpen = details.style.display !== 'none';
-            details.style.display = isOpen ? 'none' : 'block';
-            card.classList.toggle('is-open', !isOpen);
-        });
+        <button class="v-remediation-open-product" data-product="${escapeHtml(item.product)}">
+            Открыть карточку продукта
+        </button>
+
+        <div style="margin-top:16px;">
+            <h3>Ключевые CVE</h3>
+            <ul class="v-remediation-cves">
+                ${item.top_cves.map(cve => `
+                    <li class="v-remediation-cve" data-cve="${cve}">
+                        ${escapeHtml(cve)}
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+    `;
+
+    // переход к продукту
+    panel.querySelector('.v-remediation-open-product')?.addEventListener('click', () => {
+        document.querySelector('.tab[data-tab="browse"]')?.click();
+        openNote(`products/${item.product}.md`, null);
     });
 
-    container.querySelectorAll('.v-remediation-cve').forEach(button => {
-        button.addEventListener('click', () => {
-            const path = button.dataset.path;
-            if (!path) return;
-
+    // переход к CVE
+    panel.querySelectorAll('.v-remediation-cve').forEach(el => {
+        el.addEventListener('click', () => {
+            const cve = el.dataset.cve;
             document.querySelector('.tab[data-tab="browse"]')?.click();
-            openNote(path, null);
-        });
-    });
-
-    container.querySelectorAll('.v-remediation-open-product').forEach(button => {
-        button.addEventListener('click', () => {
-            const product = button.dataset.product;
-            if (!product) return;
-
-            document.querySelector('.tab[data-tab="browse"]')?.click();
-            openNote(`products/${product}.md`, null);
+            openNote(`cves/${cve}.md`, null);
         });
     });
 }

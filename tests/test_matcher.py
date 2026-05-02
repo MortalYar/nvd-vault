@@ -22,8 +22,15 @@ def make_vuln(cpe_ranges):
     )
 
 
-def test_parse_version_splits_numeric_parts():
-    assert parse_version("1.24.0") == ((1, ""), (24, ""), (0, ""))
+def test_parse_version_returns_comparable():
+    """parse_version возвращает значение, которое сравнимо с другими через vcmp.
+
+    Внутренний тип реализации (Version или tuple) — деталь реализации,
+    тест проверяет только контракт сравнения через публичный API vcmp.
+    """
+    assert vcmp("1.24.0", "1.24.0") == 0
+    assert vcmp("1.24.0", "1.23.0") == 1
+    assert vcmp("1.24.0", "1.25.0") == -1
 
 
 def test_vcmp_compares_versions():
@@ -116,3 +123,39 @@ def test_cpe_does_not_match_outside_exclusive_upper_bound():
     )
 
     assert cpe_matches_version(vuln, "nginx", "1.24.0") is False
+
+
+# ---------- Pre-release и сложные суффиксы ----------
+
+
+def test_vcmp_handles_release_candidates_numerically():
+    """rc10 должен быть БОЛЬШЕ чем rc2 (численное, не лексикографическое)."""
+    assert vcmp("1.0.0-rc10", "1.0.0-rc2") == 1
+    assert vcmp("1.0.0-rc2", "1.0.0-rc10") == -1
+
+
+def test_vcmp_release_greater_than_prerelease():
+    """1.0.0 (релиз) больше чем 1.0.0-rc1 (пре-релиз) — semver/PEP440."""
+    assert vcmp("1.0.0", "1.0.0-rc1") == 1
+    assert vcmp("1.0.0-rc1", "1.0.0") == -1
+
+
+def test_vcmp_alpha_beta_rc_ordering():
+    """alpha < beta < rc < release."""
+    assert vcmp("1.0.0a1", "1.0.0b1") == -1
+    assert vcmp("1.0.0b1", "1.0.0rc1") == -1
+    assert vcmp("1.0.0rc1", "1.0.0") == -1
+
+
+def test_vcmp_handles_wildcards():
+    """Пустые / wildcard versions сравнимы без падений."""
+    assert vcmp("", "") == 0
+    assert vcmp("*", "*") == 0
+    assert vcmp("", "1.0.0") == -1
+    assert vcmp("1.0.0", "") == 1
+
+
+def test_vcmp_fallback_for_non_pep440():
+    assert vcmp("5.7.32-0ubuntu0.18.04.1", "5.7.32-0ubuntu0.18.04.1") == 0
+    result = vcmp("5.7.32-0ubuntu0.18.04.10", "5.7.32-0ubuntu0.18.04.2")
+    assert result == 1

@@ -130,8 +130,11 @@ def compute_risk_score(
         medium          -- CVSS >= 5
         low             -- остальное
     """
-    cvss = cvss_score or 0.0
-    epss = epss_score or 0.0
+    
+    # Clamp значения в допустимые диапазоны: CVSS [0, 10], EPSS [0, 1]
+    # Защищает от мусорных данных и гарантирует корректные формулы
+    cvss = max(0.0, min(10.0, cvss_score or 0.0))
+    epss = max(0.0, min(1.0, epss_score or 0.0))
     reasoning = []
 
     # Tier 1: уже эксплуатируется

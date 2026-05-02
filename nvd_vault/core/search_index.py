@@ -6,6 +6,8 @@ import sqlite3
 from pathlib import Path
 from typing import Optional
 
+from .frontmatter import parse_frontmatter
+
 
 class SearchIndex:
     """Хранит FTS5-индекс по содержимому заметок vault."""
@@ -106,7 +108,7 @@ class SearchIndex:
             return
 
         # Извлекаем frontmatter
-        fm, body = self._split_frontmatter(content)
+        fm, body = parse_frontmatter(content)
 
         # Заголовок: первый '# ...' в теле или имя файла
         title = path.stem
@@ -135,32 +137,6 @@ class SearchIndex:
             "VALUES (?, ?, ?, ?, ?, ?)",
             (relative, folder, path.stem, title, tags_text, clean_body),
         )
-
-    @staticmethod
-    def _split_frontmatter(content: str) -> tuple[dict, str]:
-        """Разделить frontmatter и тело. Простой парсер ключ:значение."""
-        match = re.match(r"^---\n(.*?)\n---\n", content, re.DOTALL)
-        if not match:
-            return {}, content
-
-        yaml_text = match.group(1)
-        body = content[match.end():]
-
-        fm: dict = {}
-        for line in yaml_text.split("\n"):
-            if ":" not in line:
-                continue
-            key, _, value = line.partition(":")
-            key = key.strip()
-            value = value.strip()
-
-            if value.startswith("[") and value.endswith("]"):
-                inner = value[1:-1].strip()
-                fm[key] = [x.strip() for x in inner.split(",")] if inner else []
-            else:
-                fm[key] = value
-
-        return fm, body
 
     @staticmethod
     def _strip_markdown(text: str) -> str:

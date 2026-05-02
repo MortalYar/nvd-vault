@@ -1,12 +1,9 @@
 """Построение узлов и рёбер графа из vault'а."""
 
-import re
 from pathlib import Path
 from typing import Optional
 
-
-_FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
-
+from .frontmatter import read_frontmatter
 
 def build_graph(vault_path: Path) -> dict:
     """
@@ -21,7 +18,7 @@ def build_graph(vault_path: Path) -> dict:
     products_dir = vault_path / "products"
     if products_dir.exists():
         for f in products_dir.glob("*.md"):
-            fm = _read_frontmatter(f)
+            fm = read_frontmatter(f)
             node_id = f"product:{f.stem}"
             seen_nodes.add(node_id)
             nodes.append({
@@ -40,7 +37,7 @@ def build_graph(vault_path: Path) -> dict:
     cwes_dir = vault_path / "cwes"
     if cwes_dir.exists():
         for f in cwes_dir.glob("*.md"):
-            fm = _read_frontmatter(f)
+            fm = read_frontmatter(f)
             node_id = f"cwe:{f.stem}"
             seen_nodes.add(node_id)
             nodes.append({
@@ -57,7 +54,7 @@ def build_graph(vault_path: Path) -> dict:
     cves_dir = vault_path / "cves"
     if cves_dir.exists():
         for f in cves_dir.glob("*.md"):
-            fm = _read_frontmatter(f)
+            fm = read_frontmatter(f)
             node_id = f"cve:{f.stem}"
             seen_nodes.add(node_id)
 
@@ -115,33 +112,6 @@ def build_graph(vault_path: Path) -> dict:
 
 
 # ---------- Утилиты ----------
-
-def _read_frontmatter(path: Path) -> dict:
-    """Достать YAML frontmatter из .md (упрощённый парсер)."""
-    try:
-        content = path.read_text(encoding="utf-8")
-    except Exception:
-        return {}
-
-    match = _FRONTMATTER_RE.match(content)
-    if not match:
-        return {}
-
-    yaml_text = match.group(1)
-    fm: dict = {}
-    for line in yaml_text.split("\n"):
-        if ":" not in line:
-            continue
-        key, _, value = line.partition(":")
-        key = key.strip()
-        value = value.strip()
-        if value.startswith("[") and value.endswith("]"):
-            inner = value[1:-1].strip()
-            fm[key] = [x.strip() for x in inner.split(",")] if inner else []
-        else:
-            fm[key] = value
-    return fm
-
 
 def _normalize_severity(value) -> str:
     if not value:

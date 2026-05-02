@@ -2,6 +2,27 @@
 
 from .models import Vulnerability
 
+def _yaml_str(value: str) -> str:
+    """Возвращает значение, готовое к записи в YAML-frontmatter.
+
+    Если строка содержит спецсимволы (запятая, скобки, кавычка, перенос),
+    оборачивает в двойные кавычки и экранирует. Иначе возвращает как есть.
+    """
+    s = str(value)
+    if not s:
+        return '""'
+
+    needs_quoting = any(ch in s for ch in ',[]"\n\r')
+    if not needs_quoting:
+        return s
+
+    escaped = s.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
+
+
+def _yaml_list(items: list) -> str:
+    """Сериализует список в YAML inline-формат: [a, b, "c, d"]."""
+    return "[" + ", ".join(_yaml_str(item) for item in items) + "]"
 
 def severity_tag(severity: str | None) -> str:
     """CRITICAL -> 'critical' для тегов."""
@@ -22,8 +43,8 @@ def render_cve_note(vuln: Vulnerability, products_for_cve: list[str]) -> str:
     lines.append(f"cvss: {score}")
     lines.append(f"cvss_version: {vuln.cvss_version or 'null'}")
     lines.append(f"published: {published}")
-    lines.append(f"products: [{', '.join(products_for_cve)}]")
-    lines.append(f"cwes: [{', '.join(vuln.weaknesses)}]")
+    lines.append(f"products: {_yaml_list(products_for_cve)}")
+    lines.append(f"cwes: {_yaml_list(vuln.weaknesses)}")
     lines.append(f"kev: {str(vuln.cisa_kev).lower()}")
 
      # EPSS
@@ -49,7 +70,7 @@ def render_cve_note(vuln: Vulnerability, products_for_cve: list[str]) -> str:
         tags.append(vuln.risk_tier)
     if vuln.epss_score and vuln.epss_score >= 0.7:
         tags.append("high-epss")
-    lines.append(f"tags: [{', '.join(tags)}]")
+    lines.append(f"tags: {_yaml_list(tags)}")
     lines.append("---")
     lines.append("")
 

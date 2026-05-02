@@ -1,12 +1,10 @@
 """Агрегаты для дашборда: KPI, топы, распределения."""
 
-import re
 from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 
-
-_FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
+from .frontmatter import read_frontmatter
 
 
 def build_dashboard(vault_path: Path) -> dict:
@@ -247,7 +245,7 @@ def _collect_cves(vault_path: Path) -> list[dict]:
 
     result = []
     for md_file in cves_dir.glob("*.md"):
-        fm = _read_frontmatter(md_file)
+        fm = read_frontmatter(md_file)
         if not fm:
             continue
         result.append({
@@ -271,7 +269,7 @@ def _collect_products(vault_path: Path) -> list[dict]:
         return []
     result = []
     for f in products_dir.glob("*.md"):
-        fm = _read_frontmatter(f)
+        fm = read_frontmatter(f)
         result.append({
             "name": f.stem,
             "version": fm.get("version", ""),
@@ -289,31 +287,6 @@ def _collect_cwes(vault_path: Path) -> list[dict]:
 
 # ---------- Утилиты ----------
 
-def _read_frontmatter(path: Path) -> dict:
-    try:
-        content = path.read_text(encoding="utf-8")
-    except Exception:
-        return {}
-    match = _FRONTMATTER_RE.match(content)
-    if not match:
-        return {}
-
-    yaml_text = match.group(1)
-    fm: dict = {}
-    for line in yaml_text.split("\n"):
-        if ":" not in line:
-            continue
-        key, _, value = line.partition(":")
-        key = key.strip()
-        value = value.strip()
-        if value.startswith("[") and value.endswith("]"):
-            inner = value[1:-1].strip()
-            fm[key] = [x.strip() for x in inner.split(",")] if inner else []
-        else:
-            fm[key] = value
-    return fm
-
-
 def _count_by(cves: list[dict], field: str) -> dict[str, int]:
     counts: dict[str, int] = {}
     for c in cves:
@@ -323,7 +296,7 @@ def _count_by(cves: list[dict], field: str) -> dict[str, int]:
 
 
 def _to_float(value) -> Optional[float]:
-    if value is None or value == "null":
+    if value is None:
         return None
     try:
         return float(value)
@@ -332,9 +305,7 @@ def _to_float(value) -> Optional[float]:
 
 
 def _to_bool(value) -> bool:
-    if isinstance(value, bool):
-        return value
-    return str(value).lower() == "true"
+    return value is True
 
 
 def _empty_dashboard() -> dict:

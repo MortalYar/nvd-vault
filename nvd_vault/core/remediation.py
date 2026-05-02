@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from nvd_vault.core.dashboard import _read_frontmatter
+from nvd_vault.core.frontmatter import read_frontmatter
 
 
 TIER_WEIGHT = {
@@ -28,7 +28,7 @@ def build_remediation_plan(vault_path: Path) -> dict:
     products: dict[str, dict] = {}
 
     for cve_file in cves_dir.glob("*.md"):
-        fm = _read_frontmatter(cve_file)
+        fm = read_frontmatter(cve_file)
 
         product_names = _extract_products(fm)
         if not product_names:

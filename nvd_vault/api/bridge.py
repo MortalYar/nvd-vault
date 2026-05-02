@@ -6,41 +6,23 @@ import re
 import subprocess
 import sys
 import threading
+import time
 import zipfile
 from pathlib import Path
 from typing import Optional
 
 import webview
 
+from nvd_vault.core.frontmatter import parse_frontmatter, read_frontmatter
 from nvd_vault.core.remediation import build_remediation_plan
-from nvd_vault.core.sbom import load_sbom
 from nvd_vault.core.dashboard import build_dashboard
 from nvd_vault.core.enrichment import EnrichmentClient, compute_risk_score
 from nvd_vault.core.graph_builder import build_graph
 from nvd_vault.core.search_index import SearchIndex
-from nvd_vault.core.inventory import load_inventory
+from nvd_vault.core.inventory import load_input
 from nvd_vault.core.matcher import cpe_matches_version
 from nvd_vault.core.nvd_client import NvdClient
 from nvd_vault.core.vault_builder import VaultBuilder
-
-
-def _load_build_input(path: Path, input_format: str):
-    if input_format == "inventory":
-        return load_inventory(path)
-
-    if input_format == "sbom":
-        return load_sbom(path)
-
-    if input_format == "auto":
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-
-        if data.get("bomFormat") == "CycloneDX" or "spdxVersion" in data:
-            return load_sbom(path)
-
-        return load_inventory(path)
-
-    raise ValueError(f"Неизвестный формат входного файла: {input_format}")
 
 class Api:
     def __init__(self) -> None:
@@ -48,7 +30,24 @@ class Api:
         self._build_running = False
         self._current_vault: Optional[Path] = None
         self._search_index: Optional[SearchIndex] = None
+        self._kev_cache: Optional[dict] = None
+        self._kev_cache_at: float = 0.0
 
+
+    def _get_kev_data(self, ttl_seconds: int = 3600) -> dict:
+        """Возвращает CISA KEV-каталог с кэшем (TTL по умолчанию — 1 час)."""
+        now = time.monotonic()
+        if (
+            self._kev_cache is not None
+            and (now - self._kev_cache_at) < ttl_seconds
+        ):
+            return self._kev_cache
+
+        enricher = EnrichmentClient()
+        self._kev_cache = enricher.fetch_kev_catalog()
+        self._kev_cache_at = now
+        return self._kev_cache
+    
     # ---------- Утилиты ----------
 
     def ping(self) -> str:
@@ -67,6 +66,16 @@ class Api:
             return {"ok": False, "error": str(e)}
 
     def select_inventory_file(self) -> dict:
+        result = webview.windows[0].create_file_dialog(
+            webview.OPEN_DIALOG,
+            file_types=("JSON files (*.json)", "All files (*.*)"),
+        )
+        if not result:
+            return {"ok": False, "error": "Файл не выбран"}
+        return {"ok": True, "path": result[0]}
+
+    def select_input_file(self) -> dict:
+        """Диалог выбора входного файла для сборки vault (inventory или SBOM)."""
         result = webview.windows[0].create_file_dialog(
             webview.OPEN_DIALOG,
             file_types=("JSON files (*.json)", "All files (*.*)"),
@@ -165,7 +174,8 @@ class Api:
     # ---------- Сканирование одного продукта ----------
 
     def scan_product(self, product: str, version: str,
-                     vendor: str = None, api_key: str = None) -> dict:
+                     vendor: Optional[str] = None,
+                     api_key: Optional[str] = None) -> dict:
         try:
             client = NvdClient(api_key=api_key or None)
             if not vendor:
@@ -182,7 +192,7 @@ class Api:
                 enricher = EnrichmentClient()
                 cve_ids = [v.cve_id for v in matched]
                 epss_data = enricher.fetch_epss_batch(cve_ids)
-                kev_data = enricher.fetch_kev_catalog()
+                kev_data = self._get_kev_data()
 
                 for v in matched:
                     if v.cve_id in epss_data:
@@ -246,12 +256,13 @@ class Api:
     # ---------- Vault build ----------
 
     def build_vault(self, inventory_path: str, vault_path: str,
-                api_key: str = None, input_format: str = "auto") -> dict:
+                    api_key: Optional[str] = None,
+                    input_format: str = "auto") -> dict:
         if self._build_running:
             return {"ok": False, "error": "Сборка уже запущена"}
 
         try:
-            inventory = _load_build_input(Path(inventory_path), input_format)
+            inventory = load_input(Path(inventory_path), input_format)
         except (FileNotFoundError, ValueError) as e:
             return {"ok": False, "error": str(e)}
 
@@ -326,7 +337,7 @@ class Api:
             if not folder.exists():
                 continue
             for f in sorted(folder.glob("*.md")):
-                fm = _read_frontmatter(f)
+                fm = read_frontmatter(f)
                 result[subfolder].append({
                     "name": f.stem,
                     "path": f.name,  # относительный
@@ -360,7 +371,7 @@ class Api:
             "path": relative_path,
             "name": target.stem,
             "content": content,
-            "frontmatter": _parse_frontmatter_block(content)[0],
+            "frontmatter": parse_frontmatter(content)[0],
         }
 
     def resolve_wikilink(self, link: str) -> dict:
@@ -459,6 +470,10 @@ class Api:
         """Сохранить PNG-картинку графа на диск из Data URI."""
         import base64
 
+        # Защита от мусорных входных данных (limit ~50 MB на data URI)
+        if len(data_uri) > 50 * 1024 * 1024:
+            return {"ok": False, "error": "Картинка слишком большая (>50 MB)"}
+
         try:
             # Data URI формата "data:image/png;base64,iVBORw0KG..."
             if "," not in data_uri:
@@ -468,7 +483,14 @@ class Api:
             if "base64" not in header:
                 return {"ok": False, "error": "Ожидается base64-encoded PNG"}
 
-            png_bytes = base64.b64decode(encoded)
+            try:
+                png_bytes = base64.b64decode(encoded, validate=True)
+            except (ValueError, base64.binascii.Error) as e:
+                return {"ok": False, "error": f"Не удалось декодировать base64: {e}"}
+
+            # Проверка PNG-сигнатуры
+            if not png_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+                return {"ok": False, "error": "Декодированные данные — не PNG"}
 
             target = Path(png_path)
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -489,6 +511,11 @@ class Api:
             return {"ok": False, "error": "Vault не открыт"}
 
         vault = self._current_vault
+        if not vault.exists():
+            return {"ok": False, "error": f"Папка vault больше не существует: {vault}"}
+        if not vault.is_dir():
+            return {"ok": False, "error": f"Путь vault не является папкой: {vault}"}
+
         zip_target = Path(zip_path)
 
         try:
@@ -501,6 +528,11 @@ class Api:
                     zf.write(file_path, arcname=str(arcname))
                     files_added += 1
 
+            if files_added == 0:
+                # Удалим пустой ZIP — пользователю он бесполезен
+                zip_target.unlink(missing_ok=True)
+                return {"ok": False, "error": "Vault пуст — нечего экспортировать"}
+
             size_mb = zip_target.stat().st_size / (1024 * 1024)
             return {
                 "ok": True,
@@ -510,9 +542,10 @@ class Api:
             }
         except Exception as e:
             return {"ok": False, "error": f"Ошибка архивирования: {e}"}
+   
     def preview_build_input(self, input_path: str, input_format: str = "auto") -> dict:
         try:
-            inventory = _load_build_input(Path(input_path), input_format)
+            inventory = load_input(Path(input_path), input_format)
 
             return {
                 "ok": True,
@@ -529,58 +562,3 @@ class Api:
             }
         except Exception as e:
             return {"ok": False, "error": str(e)} 
-
-# ---------- Утилиты модуля ----------
-
-_FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
-
-
-def _parse_frontmatter_block(content: str) -> tuple[dict, str]:
-    """Разбирает YAML frontmatter в начале файла. Возвращает (dict, body)."""
-    match = _FRONTMATTER_RE.match(content)
-    if not match:
-        return {}, content
-
-    yaml_text = match.group(1)
-    body = content[match.end():]
-
-    # Простой парсер строк "key: value"
-    fm: dict = {}
-    for line in yaml_text.split("\n"):
-        if ":" not in line:
-            continue
-        key, _, value = line.partition(":")
-        fm[key.strip()] = _parse_yaml_value(value.strip())
-
-    return fm, body
-
-
-def _parse_yaml_value(value: str):
-    """Простейший парсер: списки [a, b], числа, bool, строки."""
-    if not value:
-        return None
-    if value.startswith("[") and value.endswith("]"):
-        inner = value[1:-1].strip()
-        if not inner:
-            return []
-        return [item.strip() for item in inner.split(",")]
-    if value in ("true", "false"):
-        return value == "true"
-    if value == "null":
-        return None
-    try:
-        if "." in value:
-            return float(value)
-        return int(value)
-    except ValueError:
-        return value
-
-
-def _read_frontmatter(path: Path) -> dict:
-    """Читает только frontmatter, без тела (быстрее для списков)."""
-    try:
-        content = path.read_text(encoding="utf-8")
-    except Exception:
-        return {}
-    fm, _ = _parse_frontmatter_block(content)
-    return fm

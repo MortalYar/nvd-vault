@@ -237,8 +237,8 @@ class TestEdgeCases:
         result = compute_risk_score(
             cvss_score=-1.0, epss_score=0.0, is_kev=False,
         )
-        # cvss_score=-1.0 — функция не отрицает его, но tier должен быть low
         assert result["tier"] == "low"
+        assert result["score"] == 0.0  # после clamp -1.0 -> 0.0
 
     def test_score_never_exceeds_10(self):
         """При любых вводах score <= 10.0."""
@@ -274,6 +274,43 @@ class TestEdgeCases:
             else:
                 result = compute_risk_score(case[0], case[1], case[2])
             assert len(result["reasoning"]) > 0
+
+    def test_negative_cvss_clamped_to_zero(self):
+        """Отрицательный CVSS должен быть приведён к 0."""
+        result = compute_risk_score(
+            cvss_score=-1.0, epss_score=0.0, is_kev=False,
+        )
+        assert result["tier"] == "low"
+        assert result["score"] == 0.0  # не -1.0
+        # В reasoning не должно быть отрицательного числа
+        assert all("-" not in r.split("CVSS ")[-1].split(",")[0]
+                   for r in result["reasoning"]
+                   if "CVSS" in r)
+
+    def test_cvss_above_10_clamped(self):
+        """CVSS > 10 должен быть приведён к 10."""
+        result = compute_risk_score(
+            cvss_score=15.0, epss_score=0.0, is_kev=False,
+        )
+        assert result["tier"] == "high"  # 10 >= 8.0
+        assert result["score"] == 10.0  # не 15.0
+
+    def test_epss_above_1_clamped(self):
+        """EPSS > 1.0 (мусор) должен быть приведён к 1.0."""
+        result = compute_risk_score(
+            cvss_score=5.0, epss_score=1.5, is_kev=False,
+        )
+        # EPSS 1.0 >= 0.7 → critical_likely
+        assert result["tier"] == "critical_likely"
+
+    def test_negative_epss_clamped(self):
+        """Отрицательный EPSS должен быть приведён к 0."""
+        result = compute_risk_score(
+            cvss_score=5.0, epss_score=-0.5, is_kev=False,
+        )
+        # EPSS=0, CVSS=5 → medium
+        assert result["tier"] == "medium"
+        assert result["score"] == 5.0
 
 
 # ---------- Параметризованный массовый тест ----------

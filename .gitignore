@@ -29,8 +29,5 @@ test-vault/
 *.db
 *.sqlite
 
-# Сгенерированные пользователями vault'ы и архивы — не коммитим
-nvd_vault/webui/vendor/
-
 # Логи
 *.log

@@ -15,10 +15,16 @@ from .nvd_cache import NvdCache
 
 
 class VaultBuilder:
-    def __init__(self, vault_path: Path, api_key: Optional[str] = None,
-                 progress_callback: Optional[Callable[[str], None]] = None):
+    def __init__(
+        self,
+        vault_path: Path,
+        api_key: Optional[str] = None,
+        progress_callback: Optional[Callable[[str], None]] = None,
+        use_cache: bool = True,
+    ):
         self.vault_path = vault_path
-        self.client = NvdClient(api_key=api_key, cache=NvdCache())
+        cache = NvdCache() if use_cache else None
+        self.client = NvdClient(api_key=api_key, cache=cache)
         self.progress = progress_callback or (lambda msg: None)
 
     def build(self, inventory: Inventory) -> dict:

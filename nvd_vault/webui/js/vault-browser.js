@@ -3,6 +3,7 @@
 function setupBrowseTab() {
     const openBtn = document.getElementById('open-vault-btn');
     const exportBtn = document.getElementById('export-btn');
+    const renameBtn = document.getElementById('rename-vault-btn');
     const meta = document.getElementById('vault-meta');
     const browser = document.getElementById('vault-browser');
     const filterInput = document.getElementById('filter-input');
@@ -22,15 +23,12 @@ function setupBrowseTab() {
         }
 
         AppState.setVault(folder.path, r.meta);
-
-        const indexed = r.meta.indexed_notes !== undefined
-            ? `, проиндексировано ${r.meta.indexed_notes}` : '';
-        meta.textContent = `${r.meta.vault_name} · ` +
-            `${r.meta.products_count} продуктов, ${r.meta.cves_count} CVE${indexed}`;
+        updateVaultMetaDisplay();
 
         browser.style.display = 'grid';
         searchBar.style.display = 'flex';
         exportBtn.disabled = false;
+        renameBtn.style.display = 'inline-flex';
 
         await loadNotesList();
     });
@@ -64,6 +62,8 @@ function setupBrowseTab() {
         );
     });
 
+    renameBtn.addEventListener('click', handleRenameVault);
+    
     filterInput.addEventListener('input', () => {
         const q = filterInput.value.toLowerCase();
         document.querySelectorAll('.note-group li').forEach(li => {
@@ -179,6 +179,38 @@ function setupBrowseTab() {
             .replace(/&lt;mark&gt;/g, '<mark>')
             .replace(/&lt;\/mark&gt;/g, '</mark>');
     }
+}
+
+function updateVaultMetaDisplay() {
+    const meta = document.getElementById('vault-meta');
+    if (!meta || !AppState.currentVaultMeta) return;
+
+    const m = AppState.currentVaultMeta;
+    const indexed = m.indexed_notes !== undefined
+        ? `, проиндексировано ${m.indexed_notes}` : '';
+    meta.textContent = `${m.vault_name} · ` +
+        `${m.products_count} продуктов, ${m.cves_count} CVE${indexed}`;
+}
+
+async function handleRenameVault() {
+    if (!AppState.currentVaultMeta) return;
+
+    const current = AppState.currentVaultMeta.vault_name || '';
+    const newName = prompt('Новое имя vault:', current);
+
+    if (newName === null) return;  // отмена
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === current) return;  // пусто или без изменений
+
+    const r = await window.pywebview.api.rename_vault(trimmed);
+    if (!r.ok) {
+        alert('Ошибка: ' + r.error);
+        return;
+    }
+
+    // Обновляем state и UI
+    AppState.currentVaultMeta = r.meta;
+    updateVaultMetaDisplay();
 }
 
 // Глобальное хранилище CVE для пересортировки на лету

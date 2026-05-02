@@ -324,6 +324,40 @@ class Api:
             meta["index_error"] = str(e)
 
         return {"ok": True, "meta": meta, "path": str(path)}
+    
+    def rename_vault(self, new_name: str) -> dict:
+        """Меняет vault_name в meta.json открытого vault."""
+        if not self._current_vault:
+            return {"ok": False, "error": "Vault не открыт"}
+
+        new_name = (new_name or "").strip()
+        if not new_name:
+            return {"ok": False, "error": "Имя не может быть пустым"}
+        if len(new_name) > 200:
+            return {"ok": False, "error": "Имя слишком длинное (>200 символов)"}
+
+        meta_file = self._current_vault / "meta.json"
+        if not meta_file.exists():
+            return {"ok": False, "error": "meta.json не найден"}
+
+        try:
+            with meta_file.open(encoding="utf-8") as f:
+                meta = json.load(f)
+
+            old_name = meta.get("vault_name", "")
+            meta["vault_name"] = new_name
+
+            with meta_file.open("w", encoding="utf-8") as f:
+                json.dump(meta, f, ensure_ascii=False, indent=2)
+
+            return {
+                "ok": True,
+                "old_name": old_name,
+                "new_name": new_name,
+                "meta": meta,
+            }
+        except (OSError, json.JSONDecodeError) as e:
+            return {"ok": False, "error": f"Ошибка записи meta.json: {e}"}
 
     def list_vault_notes(self) -> dict:
         """Вернуть список всех заметок vault, сгруппированных по типу."""

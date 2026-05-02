@@ -11,13 +11,14 @@ from .markdown_writer import render_cve_note, render_cwe_note, render_product_no
 from .matcher import cpe_matches_version
 from .models import Vulnerability
 from .nvd_client import NvdClient
+from .nvd_cache import NvdCache
 
 
 class VaultBuilder:
     def __init__(self, vault_path: Path, api_key: Optional[str] = None,
                  progress_callback: Optional[Callable[[str], None]] = None):
         self.vault_path = vault_path
-        self.client = NvdClient(api_key=api_key)
+        self.client = NvdClient(api_key=api_key, cache=NvdCache())
         self.progress = progress_callback or (lambda msg: None)
 
     def build(self, inventory: Inventory) -> dict:

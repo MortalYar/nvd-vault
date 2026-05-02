@@ -6,6 +6,7 @@ from typing import Optional
 import requests
 
 from .models import CpeRange, Vulnerability
+from .nvd_cache import NvdCache
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,11 @@ MIN_INTERVAL_WITH_KEY = 0.7
 
 
 class NvdClient:
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        cache: Optional[NvdCache] = None,
+    ):
         self.session = requests.Session()
         self.session.headers["User-Agent"] = (
             "Mozilla/5.0 (compatible; nvd-vault/1.0)"
@@ -34,6 +39,7 @@ class NvdClient:
             self.session.headers["apiKey"] = api_key
         self._min_interval = MIN_INTERVAL_WITH_KEY if api_key else MIN_INTERVAL_NO_KEY
         self._last_request_at: float = 0.0
+        self.cache = cache
 
     def _throttle(self) -> None:
             """Гарантирует минимальный интервал между запросами к NVD."""
@@ -133,10 +139,24 @@ class NvdClient:
 
     def discover_vendors(self, product: str) -> list[str]:
         """Список vendor'ов для продукта из CPE Dictionary."""
-        data = self._request(
-            NVD_CPE_URL,
-            {"keywordSearch": product, "resultsPerPage": 500},
-        )
+        cache_key = f"vendors__{product}"
+        if self.cache is not None:
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                logger.debug("NVD cache hit (vendors): %s", product)
+                data = cached
+            else:
+                data = self._request(
+                    NVD_CPE_URL,
+                    {"keywordSearch": product, "resultsPerPage": 500},
+                )
+                self.cache.set(cache_key, data)
+        else:
+            data = self._request(
+                NVD_CPE_URL,
+                {"keywordSearch": product, "resultsPerPage": 500},
+            )
+
         vendors: dict[str, int] = {}
         product_lc = product.lower()
         for prod in data.get("products", []):
@@ -147,8 +167,22 @@ class NvdClient:
         return sorted(vendors.keys(), key=lambda v: -vendors[v])
 
     def fetch_cves(self, vendor: str, product: str) -> list[Vulnerability]:
+        cache_key = f"cves__{vendor}__{product}"
+
+        # Кэш-попадание: возвращаем сохранённые сырые vulnerabilities,
+        # парсим заново (Vulnerability dataclass'ы не сериализуются в JSON).
+        if self.cache is not None:
+            cached = self.cache.get(cache_key)
+            if cached is not None:
+                logger.debug(
+                    "NVD cache hit (cves): %s/%s, %d items",
+                    vendor, product, len(cached.get("vulnerabilities", [])),
+                )
+                return self._parse_raw_vulnerabilities(cached)
+
+        # Кэш-промах: собираем все страницы с пагинацией.
         cpe_match = f"cpe:2.3:a:{vendor}:{product.lower()}:*:*:*:*:*:*:*:*"
-        results: list[Vulnerability] = []
+        all_raw: list[dict] = []
         start_index = 0
 
         while True:
@@ -158,16 +192,26 @@ class NvdClient:
                 "startIndex": start_index,
             }
             data = self._request(NVD_CVE_URL, params)
-            for item in data.get("vulnerabilities", []):
-                v = self._parse_cve(item.get("cve", {}))
-                if v:
-                    results.append(v)
+            all_raw.extend(data.get("vulnerabilities", []))
 
             total = data.get("totalResults", 0) or 0
             start_index += RESULTS_PER_PAGE
             if start_index >= total:
                 break
 
+        # В кэш — сырой агрегированный ответ
+        if self.cache is not None:
+            self.cache.set(cache_key, {"vulnerabilities": all_raw})
+
+        return self._parse_raw_vulnerabilities({"vulnerabilities": all_raw})
+
+    def _parse_raw_vulnerabilities(self, data: dict) -> list[Vulnerability]:
+        """Парсит {"vulnerabilities": [...]} в list[Vulnerability]."""
+        results: list[Vulnerability] = []
+        for item in data.get("vulnerabilities", []):
+            v = self._parse_cve(item.get("cve", {}))
+            if v:
+                results.append(v)
         return results
 
     @staticmethod

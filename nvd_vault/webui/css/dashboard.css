@@ -452,3 +452,23 @@
     color: #adc6ff;
     margin-top: 4px;
 }
+
+.v-remediation-cve {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.v-remediation-cve-id {
+    font-weight: 600;
+}
+
+.v-remediation-cve-meta {
+    font-size: 12px;
+    color: var(--v-text-muted);
+}
+
+.v-remediation-cve-kev {
+    color: var(--v-error);
+    font-weight: 600;
+}

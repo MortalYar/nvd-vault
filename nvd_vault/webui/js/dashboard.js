@@ -1,5 +1,19 @@
 // ---------- Tab: дашборд ----------
 let remediationItemsCache = [];
+
+// Локализованные подписи для recommendation_code (см. core/remediation.py).
+const RECOMMENDATION_LABELS = {
+    patch_now: 'Патчить срочно',
+    patch_days: 'Патчить в течение дней',
+    patch_window: 'В ближайшее окно патчинга',
+    plan_standard: 'Плановое обновление',
+    monitor: 'Мониторить',
+};
+
+function recommendationLabel(code) {
+    return RECOMMENDATION_LABELS[code] || code;
+}
+
 let selectedRemediationItem = null;
 
 function setupDashboardTab() {
@@ -131,11 +145,11 @@ function renderRemediationPlan(items) {
             </div>
 
             <div class="v-remediation-row-meta">
-                ${item.recommendation}
+                ${escapeHtml(recommendationLabel(item.recommendation))}
             </div>
 
             <div class="v-remediation-row-score">
-                ${item.remediation_score}
+                ${item.remediation_score.toFixed(1)}
             </div>
         `;
 
@@ -185,8 +199,13 @@ function renderRemediationDetails(item) {
             <h3>Ключевые CVE</h3>
             <ul class="v-remediation-cves">
                 ${item.top_cves.map(cve => `
-                    <li class="v-remediation-cve" data-cve="${cve}">
-                        ${escapeHtml(cve)}
+                    <li class="v-remediation-cve tier-${escapeHtml(cve.risk_tier || 'unknown')}" data-cve="${escapeHtml(cve.cve_id)}">
+                        <span class="v-remediation-cve-id">${escapeHtml(cve.cve_id)}</span>
+                        <span class="v-remediation-cve-meta">
+                            CVSS ${(cve.cvss ?? 0).toFixed(1)} · EPSS ${((cve.epss ?? 0) * 100).toFixed(1)}%
+                            ${cve.kev ? ' · <span class="v-remediation-cve-kev">⚠ KEV</span>' : ''}
+                            ${cve.ransomware ? ' · 🔒' : ''}
+                        </span>
                     </li>
                 `).join('')}
             </ul>
@@ -214,16 +233,16 @@ function renderRemediationSummary(summary, items) {
     if (!el) return;
 
     const immediate = items.filter(i =>
-        i.recommendation === 'Patch immediately'
+        i.recommendation === 'patch_now'
     ).length;
 
     const kev = items.reduce((sum, i) => sum + i.kev_count, 0);
 
     el.innerHTML = `
-        <span>${summary.products} products</span>
+        <span>${summary.products} продуктов</span>
         <span>${summary.cves} CVE</span>
         <span>${kev} KEV</span>
-        <span>${immediate} immediate</span>
+        <span>${immediate} срочных</span>
     `;
 }
 

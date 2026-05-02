@@ -162,18 +162,18 @@ def _extract_products(frontmatter: dict) -> list[str]:
 
 def _recommend(item: dict) -> str:
     if item["kev_count"] > 0 or item["critical_now"] > 0:
-        return "Patch immediately"
+        return "patch_now"
 
     if item["critical_likely"] > 0:
-        return "Patch within days"
+        return "patch_days"
 
     if item["high"] > 0:
-        return "Prioritize in next patch window"
+        return "patch_window"
 
     if item["medium"] > 0:
-        return "Plan standard remediation"
+        return "plan_standard"
 
-    return "Monitor"
+    return "monitor"
 
 
 def _to_float(value, default: float = 0.0) -> float:

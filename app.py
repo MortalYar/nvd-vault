@@ -112,6 +112,7 @@ def run_build_command(args: argparse.Namespace) -> int:
             vault_path=vault_path,
             api_key=api_key,
             progress_callback=show_progress,
+            use_cache=not args.no_cache,
         )
         meta = builder.build(inventory)
     except RuntimeError as e:
@@ -129,6 +130,26 @@ def run_build_command(args: argparse.Namespace) -> int:
     print(f"  CWEs: {meta['cwes_count']}")
     return 0
 
+def run_cache_command(args: argparse.Namespace) -> int:
+    from nvd_vault.core.nvd_cache import NvdCache
+
+    cache = NvdCache()
+
+    if args.cache_command == "stats":
+        s = cache.stats()
+        size_mb = s["bytes"] / (1024 * 1024)
+        print(f"Кэш: {s['path']}")
+        print(f"Файлов: {s['files']}")
+        print(f"Размер: {size_mb:.2f} MB")
+        return 0
+
+    if args.cache_command == "clear":
+        deleted = cache.clear()
+        print(f"Удалено файлов: {deleted}")
+        return 0
+
+    print("Использование: nvd-vault cache {stats|clear}")
+    return 1
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -161,6 +182,20 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="NVD API key. If omitted, NVD_API_KEY environment variable is used.",
     )
+    build.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Don't use disk cache for NVD responses (always fetch fresh).",
+    )
+
+    # ----- Cache subcommands -----
+    cache = subparsers.add_parser(
+        "cache",
+        help="Manage local NVD response cache.",
+    )
+    cache_sub = cache.add_subparsers(dest="cache_command")
+    cache_sub.add_parser("stats", help="Show cache size and file count.")
+    cache_sub.add_parser("clear", help="Delete all cached NVD responses.")
 
     return parser
 
@@ -172,6 +207,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "build":
         return run_build_command(args)
+
+    if args.command == "cache":
+        return run_cache_command(args)
 
     run_gui()
     return 0

@@ -44,3 +44,26 @@ function guessInputFormat(path) {
 
     return 'auto';
 }
+
+function safeFilename(value, fallback = 'untitled') {
+    // Имя файла, безопасное для всех современных ФС.
+    // Сохраняем unicode, цифры, дефис, подчёркивание, точку.
+    // Заменяем пробелы на _ и режем зарезервированные символы Windows.
+    let name = String(value ?? '').trim();
+    if (!name) return fallback;
+
+    // Зарезервированные на Windows: < > : " / \ | ? * + управляющие 0x00-0x1F
+    name = name.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
+
+    // Пробелы и табы → _
+    name = name.replace(/\s+/g, '_');
+
+    // Точки в начале/конце Windows не любит ("Untitled." и ".file" глюкавят)
+    name = name.replace(/^\.+|\.+$/g, '');
+
+    // Длина: безопасный предел — 200 символов (NTFS лимит 255 на компонент пути,
+    // оставляем запас под расширение и timestamp).
+    if (name.length > 200) name = name.slice(0, 200);
+
+    return name || fallback;
+}

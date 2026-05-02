@@ -9,7 +9,6 @@ function setupDashboardTab() {
 }
 
 async function loadDashboard() {
-
     const status = document.getElementById('dashboard-status');
     const content = document.getElementById('dashboard-content');
     const loadBtn = document.getElementById('dashboard-load-btn');

@@ -48,13 +48,14 @@ function setupInventoryEditor() {
         vaultNameInput.value = r.vault_name || '';
         const tbody = document.getElementById('products-tbody');
         tbody.innerHTML = '';
-        if (r.products.length === 0) {
+        const products = r.products || [];
+        if (products.length === 0) {
             renderEmptyTable();
         } else {
-            r.products.forEach(p => addProductRow(p));
+            products.forEach(p => addProductRow(p));
         }
         updatePathDisplay();
-        setStatus(`Загружено: ${r.products.length} продуктов`, 'success');
+        setStatus(`Загружено: ${products.length} продуктов`, 'success');
         updateInventoryButtons();
 
         // Автоматически устанавливаем как inventory-path для сборки
@@ -70,8 +71,7 @@ function setupInventoryEditor() {
     });
 
     saveAsBtn.addEventListener('click', async () => {
-        const defaultName = (vaultNameInput.value || 'inventory')
-            .replace(/[^a-zA-Z0-9_-]/g, '_') + '.json';
+        const defaultName = safeFilename(vaultNameInput.value, 'inventory') + '.json';
         const dlg = await window.pywebview.api.save_inventory_dialog(defaultName);
         if (!dlg.ok) return;
 

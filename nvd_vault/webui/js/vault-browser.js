@@ -36,8 +36,8 @@ function setupBrowseTab() {
     });
 
     exportBtn.addEventListener('click', async () => {
-        const vaultName = meta.textContent.split(' · ')[0] || 'vault';
-        const safeName = vaultName.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const vaultName = AppState.currentVaultMeta?.vault_name || 'vault';
+        const safeName = safeFilename(vaultName, 'vault');
         const dateStr = new Date().toISOString().slice(0, 10);
         const defaultName = `${safeName}_${dateStr}.zip`;
 
@@ -299,8 +299,8 @@ function fillList(elementId, notes) {
         }
 
         // Иконка KEV/ransomware рядом с именем
-        const isKev = String(note.frontmatter?.kev || '').toLowerCase() === 'true';
-        const isRansom = String(note.frontmatter?.ransomware || '').toLowerCase() === 'true';
+        const isKev = toBool(note.frontmatter?.kev);
+        const isRansom = toBool(note.frontmatter?.ransomware);
         if (isKev || isRansom) {
             const icons = document.createElement('span');
             icons.className = 'v-note-badges';
@@ -389,13 +389,15 @@ async function processWikilinks(body) {
     const matches = [...body.matchAll(/\[\[([^\]]+)\]\]/g)];
     if (matches.length === 0) return body;
 
-    // Резолвим каждую ссылку через бэк
+    // Уникальные имена ссылок — за один batch-вызов в bridge
+    const uniqueLinks = [...new Set(matches.map(m => m[1]))];
+    const r = await window.pywebview.api.resolve_wikilinks(uniqueLinks);
+
     const linkMap = new Map();
-    for (const m of matches) {
-        const linkName = m[1];
-        if (linkMap.has(linkName)) continue;
-        const r = await window.pywebview.api.resolve_wikilink(linkName);
-        linkMap.set(linkName, r.found ? r.relative_path : null);
+    if (r.ok && r.results) {
+        for (const [name, path] of Object.entries(r.results)) {
+            linkMap.set(name, path);  // path может быть null если не найдено
+        }
     }
 
     // Подменяем

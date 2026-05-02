@@ -391,6 +391,30 @@ class Api:
 
         return {"ok": True, "found": False}
     
+    def resolve_wikilinks(self, links: list) -> dict:
+        """Batch-вариант resolve_wikilink: разрешает сразу список ссылок.
+
+        Один round-trip из JS → быстрее, чем N последовательных вызовов.
+
+        Возвращает {ok: True, results: {link_name: relative_path or null}}.
+        """
+        if not self._current_vault:
+            return {"ok": False, "error": "Vault не открыт"}
+
+        results: dict[str, Optional[str]] = {}
+        for link in links:
+            if link in results:
+                continue
+            found_path: Optional[str] = None
+            for subfolder in ("products", "cves", "cwes"):
+                candidate = self._current_vault / subfolder / f"{link}.md"
+                if candidate.exists():
+                    found_path = f"{subfolder}/{candidate.name}"
+                    break
+            results[link] = found_path
+
+        return {"ok": True, "results": results}
+    
     def search_vault(self, query: str) -> dict:
             """Полнотекстовый поиск по открытому vault."""
             if not self._current_vault:

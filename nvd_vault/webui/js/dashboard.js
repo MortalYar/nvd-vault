@@ -471,7 +471,7 @@ function getFilteredRemediationItems() {
 
     if (immediateOnly?.checked) {
         return remediationItemsCache.filter(item =>
-            item.recommendation === 'Patch immediately'
+            item.recommendation === 'patch_now'
         );
     }
 

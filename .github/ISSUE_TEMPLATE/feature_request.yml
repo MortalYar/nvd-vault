@@ -1,0 +1,58 @@
+name: ✨ Feature request
+description: Suggest a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement! Please describe the use case clearly so we can evaluate the trade-offs.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this feature solve? What are you trying to do?
+      placeholder: |
+        When auditing large inventories with 100+ products, I currently have to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you like this to work? Describe the desired behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches have you tried or considered?
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Which part of NVD Vault does this affect?
+      multiple: true
+      options:
+        - CLI
+        - GUI / web UI
+        - Vault output format (Markdown notes)
+        - NVD API client / caching
+        - Risk scoring (CVSS/EPSS/KEV)
+        - SBOM ingestion
+        - Search / dashboard
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submit checks
+      options:
+        - label: I have searched existing issues and discussions for similar requests
+          required: true

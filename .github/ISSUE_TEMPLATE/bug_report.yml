@@ -1,0 +1,91 @@
+name: 🐛 Bug report
+description: Report something that's broken or behaving unexpectedly
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report! Please fill out the fields below — incomplete reports may be closed without action.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of what went wrong and what you expected instead.
+      placeholder: |
+        I ran `nvd-vault build inventory.json --out vault/` and the build failed with...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to reproduce the issue. If possible, attach a sanitized inventory.json.
+      placeholder: |
+        1. Create inventory.json with...
+        2. Run `nvd-vault build ...`
+        3. See error
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: NVD Vault version
+      description: Output of `pip show nvd-vault` or commit hash if installed from source
+      placeholder: "0.1.0 / commit abc1234"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS
+        - Linux (Ubuntu/Debian)
+        - Linux (other)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: Output of `python --version`
+      placeholder: "3.13.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      description: Were you using the GUI or the CLI?
+      options:
+        - GUI (desktop window)
+        - CLI (`nvd-vault build`)
+        - Both
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / error output
+      description: Paste the full traceback or error message. Logs are formatted automatically — no need for backticks.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submit checks
+      options:
+        - label: I have searched existing issues and this is not a duplicate
+          required: true
+        - label: I have removed any sensitive data (real CVEs from internal infra, internal hostnames, etc.) from logs and the inventory
+          required: true

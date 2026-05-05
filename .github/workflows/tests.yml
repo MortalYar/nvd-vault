@@ -55,7 +55,7 @@ jobs:
 
       - name: Compile requirements from pyproject.toml
         run: |
-          pip-compile --extra=dev --output-file=audit-requirements.txt pyproject.toml
+          pip-compile --extra=dev --generate-hashes --output-file=audit-requirements.txt pyproject.toml
 
       - name: Run pip-audit
         run: pip-audit --strict --disable-pip --requirement audit-requirements.txt

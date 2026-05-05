@@ -59,8 +59,9 @@ def run_gui() -> None:
         height=800,
         min_size=(800, 600),
     )
+    debug_enabled = os.getenv("NVD_VAULT_DEBUG", "").lower() in ("1", "true", "yes")
     webview.start(
-        debug=True,
+        debug=debug_enabled,
         icon=str(icon_path) if icon_path.exists() else None,
     )
 

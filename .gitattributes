@@ -1,0 +1,15 @@
+* text=auto eol=lf
+
+# Bat-файлы Windows должны оставаться CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Бинарные файлы — не трогать
+*.png binary
+*.ico binary
+*.jpg binary
+*.gif binary
+*.webp binary
+*.db binary
+*.sqlite binary
+*.zip binary

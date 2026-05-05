@@ -7,6 +7,7 @@ from typing import Optional
 @dataclass
 class CpeRange:
     """CPE-конфигурация с диапазоном версий."""
+
     criteria: str
     version_start_including: Optional[str] = None
     version_start_excluding: Optional[str] = None
@@ -17,6 +18,7 @@ class CpeRange:
 @dataclass
 class Vulnerability:
     """Одна уязвимость CVE со всеми метаданными."""
+
     cve_id: str
     description_en: str
     cvss_score: Optional[float]

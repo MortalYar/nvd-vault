@@ -31,9 +31,7 @@ class NvdClient:
         cache: Optional[NvdCache] = None,
     ):
         self.session = requests.Session()
-        self.session.headers["User-Agent"] = (
-            "Mozilla/5.0 (compatible; nvd-vault/1.0)"
-        )
+        self.session.headers["User-Agent"] = "Mozilla/5.0 (compatible; nvd-vault/1.0)"
         self.api_key = api_key
         if api_key:
             self.session.headers["apiKey"] = api_key
@@ -42,13 +40,13 @@ class NvdClient:
         self.cache = cache
 
     def _throttle(self) -> None:
-            """Гарантирует минимальный интервал между запросами к NVD."""
-            if self._last_request_at == 0.0:
-                return
-            elapsed = time.monotonic() - self._last_request_at
-            wait = self._min_interval - elapsed
-            if wait > 0:
-                time.sleep(wait)
+        """Гарантирует минимальный интервал между запросами к NVD."""
+        if self._last_request_at == 0.0:
+            return
+        elapsed = time.monotonic() - self._last_request_at
+        wait = self._min_interval - elapsed
+        if wait > 0:
+            time.sleep(wait)
 
     def _request(self, url: str, params: dict) -> dict:
         last_error: requests.RequestException | None = None
@@ -97,7 +95,8 @@ class NvdClient:
                 if attempt < REQUEST_RETRIES:
                     logger.warning(
                         "NVD: 429 Too Many Requests, retrying %s/%s",
-                        attempt, REQUEST_RETRIES,
+                        attempt,
+                        REQUEST_RETRIES,
                     )
                     time.sleep(RETRY_SLEEP * attempt * 2)
                     continue
@@ -109,8 +108,7 @@ class NvdClient:
             # Другие 4xx
             if 400 <= r.status_code < 500:
                 raise RuntimeError(
-                    f"NVD API error: HTTP {r.status_code}. "
-                    f"Тело ответа: {r.text[:200]}"
+                    f"NVD API error: HTTP {r.status_code}. Тело ответа: {r.text[:200]}"
                 )
 
             # 5xx: серверная ошибка
@@ -119,7 +117,9 @@ class NvdClient:
                 if attempt < REQUEST_RETRIES:
                     logger.warning(
                         "NVD %s, retrying %s/%s",
-                        r.status_code, attempt, REQUEST_RETRIES,
+                        r.status_code,
+                        attempt,
+                        REQUEST_RETRIES,
                     )
                     time.sleep(RETRY_SLEEP * attempt)
                     continue
@@ -131,9 +131,7 @@ class NvdClient:
             try:
                 return r.json()
             except ValueError as e:
-                raise RuntimeError(
-                    f"NVD вернул невалидный JSON: {e}"
-                ) from e
+                raise RuntimeError(f"NVD вернул невалидный JSON: {e}") from e
 
         raise RuntimeError("NVD API error: неизвестная ошибка")
 
@@ -176,7 +174,9 @@ class NvdClient:
             if cached is not None:
                 logger.debug(
                     "NVD cache hit (cves): %s/%s, %d items",
-                    vendor, product, len(cached.get("vulnerabilities", [])),
+                    vendor,
+                    product,
+                    len(cached.get("vulnerabilities", [])),
                 )
                 return self._parse_raw_vulnerabilities(cached)
 
@@ -228,8 +228,11 @@ class NvdClient:
 
         score = severity = vector = cvss_ver = None
         metrics = cve.get("metrics", {})
-        for key, ver in (("cvssMetricV31", "3.1"), ("cvssMetricV30", "3.0"),
-                         ("cvssMetricV2", "2.0")):
+        for key, ver in (
+            ("cvssMetricV31", "3.1"),
+            ("cvssMetricV30", "3.0"),
+            ("cvssMetricV2", "2.0"),
+        ):
             if metrics.get(key):
                 m = metrics[key][0]
                 cvss = m.get("cvssData", {})
@@ -251,13 +254,15 @@ class NvdClient:
             for node in conf.get("nodes", []):
                 for cpe in node.get("cpeMatch", []):
                     if cpe.get("vulnerable") and cpe.get("criteria"):
-                        cpe_ranges.append(CpeRange(
-                            criteria=cpe["criteria"],
-                            version_start_including=cpe.get("versionStartIncluding"),
-                            version_start_excluding=cpe.get("versionStartExcluding"),
-                            version_end_including=cpe.get("versionEndIncluding"),
-                            version_end_excluding=cpe.get("versionEndExcluding"),
-                        ))
+                        cpe_ranges.append(
+                            CpeRange(
+                                criteria=cpe["criteria"],
+                                version_start_including=cpe.get("versionStartIncluding"),
+                                version_start_excluding=cpe.get("versionStartExcluding"),
+                                version_end_including=cpe.get("versionEndIncluding"),
+                                version_end_excluding=cpe.get("versionEndExcluding"),
+                            )
+                        )
 
         references = []
         seen = set()

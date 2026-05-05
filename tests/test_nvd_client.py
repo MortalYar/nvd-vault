@@ -28,26 +28,10 @@ def test_discover_vendors_returns_matching_application_vendors(monkeypatch):
 
         return {
             "products": [
-                {
-                    "cpe": {
-                        "cpeName": "cpe:2.3:a:nginx:nginx:1.24.0:*:*:*:*:*:*:*"
-                    }
-                },
-                {
-                    "cpe": {
-                        "cpeName": "cpe:2.3:a:f5:nginx:1.23.0:*:*:*:*:*:*:*"
-                    }
-                },
-                {
-                    "cpe": {
-                        "cpeName": "cpe:2.3:o:nginx:nginx:1.24.0:*:*:*:*:*:*:*"
-                    }
-                },
-                {
-                    "cpe": {
-                        "cpeName": "cpe:2.3:a:apache:http_server:2.4.0:*:*:*:*:*:*:*"
-                    }
-                },
+                {"cpe": {"cpeName": "cpe:2.3:a:nginx:nginx:1.24.0:*:*:*:*:*:*:*"}},
+                {"cpe": {"cpeName": "cpe:2.3:a:f5:nginx:1.23.0:*:*:*:*:*:*:*"}},
+                {"cpe": {"cpeName": "cpe:2.3:o:nginx:nginx:1.24.0:*:*:*:*:*:*:*"}},
+                {"cpe": {"cpeName": "cpe:2.3:a:apache:http_server:2.4.0:*:*:*:*:*:*:*"}},
             ]
         }
 

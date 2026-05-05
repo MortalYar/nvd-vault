@@ -148,9 +148,7 @@ def _extract_products(frontmatter: dict) -> list[str]:
 
     if isinstance(products, str):
         return [
-            p.strip()
-            for p in products.replace("[", "").replace("]", "").split(",")
-            if p.strip()
+            p.strip() for p in products.replace("[", "").replace("]", "").split(",") if p.strip()
         ]
 
     product = frontmatter.get("product")

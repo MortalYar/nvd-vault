@@ -11,19 +11,13 @@ def test_load_cyclonedx_sbom(tmp_path):
         json.dumps(
             {
                 "bomFormat": "CycloneDX",
-                "metadata": {
-                    "component": {
-                        "name": "Test App"
-                    }
-                },
+                "metadata": {"component": {"name": "Test App"}},
                 "components": [
                     {
                         "type": "library",
                         "name": "nginx",
                         "version": "1.24.0",
-                        "supplier": {
-                            "name": "nginx"
-                        },
+                        "supplier": {"name": "nginx"},
                     },
                     {
                         "type": "library",

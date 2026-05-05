@@ -54,8 +54,9 @@ class VaultBuilder:
                 vendor = vendors[0]
 
             all_for_product = self.client.fetch_cves(vendor, item.name)
-            matched = [v for v in all_for_product
-                       if cpe_matches_version(v, item.name, item.version)]
+            matched = [
+                v for v in all_for_product if cpe_matches_version(v, item.name, item.version)
+            ]
 
             self.progress(f"  Найдено {len(matched)} из {len(all_for_product)} CVE")
 
@@ -74,8 +75,7 @@ class VaultBuilder:
 
             cve_ids = list(all_cves.keys())
             epss_data = enricher.fetch_epss_batch(cve_ids)
-            self.progress(f"  EPSS: получены данные для {len(epss_data)} из "
-                          f"{len(cve_ids)} CVE")
+            self.progress(f"  EPSS: получены данные для {len(epss_data)} из {len(cve_ids)} CVE")
 
             for cve_id, vuln in all_cves.items():
                 if cve_id in epss_data:
@@ -108,9 +108,7 @@ class VaultBuilder:
 
         for cve_id, vuln in all_cves.items():
             content = render_cve_note(vuln, cve_to_products.get(cve_id, []))
-            (self.vault_path / "cves" / f"{cve_id}.md").write_text(
-                content, encoding="utf-8"
-            )
+            (self.vault_path / "cves" / f"{cve_id}.md").write_text(content, encoding="utf-8")
 
         for item in inventory.products:
             if item.name not in product_to_cves:
@@ -119,9 +117,7 @@ class VaultBuilder:
             content = render_product_note(
                 item.name, vendor, item.version, product_to_cves[item.name]
             )
-            (self.vault_path / "products" / f"{item.name}.md").write_text(
-                content, encoding="utf-8"
-            )
+            (self.vault_path / "products" / f"{item.name}.md").write_text(content, encoding="utf-8")
 
         cwe_to_cves: dict[str, list[Vulnerability]] = {}
         for vuln in all_cves.values():
@@ -129,9 +125,7 @@ class VaultBuilder:
                 cwe_to_cves.setdefault(cwe, []).append(vuln)
         for cwe_id, cves in cwe_to_cves.items():
             content = render_cwe_note(cwe_id, cves)
-            (self.vault_path / "cwes" / f"{cwe_id}.md").write_text(
-                content, encoding="utf-8"
-            )
+            (self.vault_path / "cwes" / f"{cwe_id}.md").write_text(content, encoding="utf-8")
 
         meta = {
             "vault_name": inventory.vault_name,

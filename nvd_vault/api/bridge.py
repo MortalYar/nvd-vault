@@ -24,6 +24,7 @@ from nvd_vault.core.matcher import cpe_matches_version
 from nvd_vault.core.nvd_client import NvdClient
 from nvd_vault.core.vault_builder import VaultBuilder
 
+
 class Api:
     def __init__(self) -> None:
         self._progress_log: list[str] = []
@@ -33,21 +34,17 @@ class Api:
         self._kev_cache: Optional[dict] = None
         self._kev_cache_at: float = 0.0
 
-
     def _get_kev_data(self, ttl_seconds: int = 3600) -> dict:
         """Возвращает CISA KEV-каталог с кэшем (TTL по умолчанию — 1 час)."""
         now = time.monotonic()
-        if (
-            self._kev_cache is not None
-            and (now - self._kev_cache_at) < ttl_seconds
-        ):
+        if self._kev_cache is not None and (now - self._kev_cache_at) < ttl_seconds:
             return self._kev_cache
 
         enricher = EnrichmentClient()
         self._kev_cache = enricher.fetch_kev_catalog()
         self._kev_cache_at = now
         return self._kev_cache
-    
+
     # ---------- Утилиты ----------
 
     def ping(self) -> str:
@@ -119,8 +116,7 @@ class Api:
         except Exception as e:
             return {"ok": False, "error": f"Не удалось прочитать: {e}"}
 
-    def write_inventory(self, path: str, vault_name: str,
-                        products: list) -> dict:
+    def write_inventory(self, path: str, vault_name: str, products: list) -> dict:
         """Записать inventory.json на диск."""
         try:
             inventory_path = Path(path)
@@ -173,9 +169,13 @@ class Api:
 
     # ---------- Сканирование одного продукта ----------
 
-    def scan_product(self, product: str, version: str,
-                     vendor: Optional[str] = None,
-                     api_key: Optional[str] = None) -> dict:
+    def scan_product(
+        self,
+        product: str,
+        version: str,
+        vendor: Optional[str] = None,
+        api_key: Optional[str] = None,
+    ) -> dict:
         try:
             client = NvdClient(api_key=api_key or None)
             if not vendor:
@@ -215,13 +215,18 @@ class Api:
 
                 # Сортировка: critical_now → critical_likely → high → medium → low
                 tier_order = {
-                    "critical_now": 0, "critical_likely": 1,
-                    "high": 2, "medium": 3, "low": 4
+                    "critical_now": 0,
+                    "critical_likely": 1,
+                    "high": 2,
+                    "medium": 3,
+                    "low": 4,
                 }
-                matched.sort(key=lambda v: (
-                    tier_order.get(v.risk_tier or "low", 99),
-                    -(v.risk_score or 0),
-                ))
+                matched.sort(
+                    key=lambda v: (
+                        tier_order.get(v.risk_tier or "low", 99),
+                        -(v.risk_score or 0),
+                    )
+                )
 
             return {
                 "ok": True,
@@ -251,13 +256,16 @@ class Api:
             return {"ok": False, "error": str(e)}
         except Exception as e:
             return {"ok": False, "error": f"Неожиданная ошибка: {e}"}
-        
 
     # ---------- Vault build ----------
 
-    def build_vault(self, inventory_path: str, vault_path: str,
-                    api_key: Optional[str] = None,
-                    input_format: str = "auto") -> dict:
+    def build_vault(
+        self,
+        inventory_path: str,
+        vault_path: str,
+        api_key: Optional[str] = None,
+        input_format: str = "auto",
+    ) -> dict:
         if self._build_running:
             return {"ok": False, "error": "Сборка уже запущена"}
 
@@ -277,9 +285,7 @@ class Api:
                     progress_callback=lambda msg: self._progress_log.append(msg),
                 )
                 meta = builder.build(inventory)
-                self._progress_log.append(
-                    f"DONE::{meta['cves_count']}::{meta['products_count']}"
-                )
+                self._progress_log.append(f"DONE::{meta['cves_count']}::{meta['products_count']}")
             except Exception as e:
                 self._progress_log.append(f"ERROR::{e}")
             finally:
@@ -324,7 +330,7 @@ class Api:
             meta["index_error"] = str(e)
 
         return {"ok": True, "meta": meta, "path": str(path)}
-    
+
     def rename_vault(self, new_name: str) -> dict:
         """Меняет vault_name в meta.json открытого vault."""
         if not self._current_vault:
@@ -372,11 +378,13 @@ class Api:
                 continue
             for f in sorted(folder.glob("*.md")):
                 fm = read_frontmatter(f)
-                result[subfolder].append({
-                    "name": f.stem,
-                    "path": f.name,  # относительный
-                    "frontmatter": fm,
-                })
+                result[subfolder].append(
+                    {
+                        "name": f.stem,
+                        "path": f.name,  # относительный
+                        "frontmatter": fm,
+                    }
+                )
 
         return {"ok": True, "notes": result}
 
@@ -424,7 +432,7 @@ class Api:
                 }
 
         return {"ok": True, "found": False}
-    
+
     def resolve_wikilinks(self, links: list) -> dict:
         """Batch-вариант resolve_wikilink: разрешает сразу список ссылок.
 
@@ -448,21 +456,21 @@ class Api:
             results[link] = found_path
 
         return {"ok": True, "results": results}
-    
+
     def search_vault(self, query: str) -> dict:
-            """Полнотекстовый поиск по открытому vault."""
-            if not self._current_vault:
-                return {"ok": False, "error": "Vault не открыт"}
-            if not self._search_index:
-                return {"ok": False, "error": "Индекс не построен"}
+        """Полнотекстовый поиск по открытому vault."""
+        if not self._current_vault:
+            return {"ok": False, "error": "Vault не открыт"}
+        if not self._search_index:
+            return {"ok": False, "error": "Индекс не построен"}
 
-            query = (query or "").strip()
-            if len(query) < 2:
-                return {"ok": True, "results": [], "query": query}
+        query = (query or "").strip()
+        if len(query) < 2:
+            return {"ok": True, "results": [], "query": query}
 
-            results = self._search_index.search(query, limit=50)
-            return {"ok": True, "results": results, "query": query}
-    
+        results = self._search_index.search(query, limit=50)
+        return {"ok": True, "results": results, "query": query}
+
     def get_dashboard(self) -> dict:
         """Собрать данные для дашборда по открытому vault."""
         if not self._current_vault:
@@ -473,7 +481,7 @@ class Api:
             return {"ok": True, **data}
         except Exception as e:
             return {"ok": False, "error": f"Ошибка сборки дашборда: {e}"}
-    
+
     def get_graph_data(self) -> dict:
         """Собрать узлы и рёбра графа vault'а."""
         if not self._current_vault:
@@ -484,7 +492,7 @@ class Api:
             return {"ok": True, **data}
         except Exception as e:
             return {"ok": False, "error": f"Ошибка сборки графа: {e}"}
-        
+
     def get_remediation_plan(self) -> dict:
         """Построить план патчинга по открытому vault."""
         if not self._current_vault:
@@ -495,8 +503,6 @@ class Api:
             return {"ok": True, **data}
         except Exception as e:
             return {"ok": False, "error": f"Ошибка построения remediation plan: {e}"}
-
-    
 
     # ---------- Экспорт ----------
 
@@ -511,7 +517,7 @@ class Api:
             return {"ok": False, "error": "Файл не выбран"}
         path = result if isinstance(result, str) else result[0]
         return {"ok": True, "path": path}
-    
+
     def select_export_png_path(self, default_name: str = "graph.png") -> dict:
         """Диалог сохранения для PNG-экспорта графа."""
         result = webview.windows[0].create_file_dialog(
@@ -600,7 +606,7 @@ class Api:
             }
         except Exception as e:
             return {"ok": False, "error": f"Ошибка архивирования: {e}"}
-   
+
     def preview_build_input(self, input_path: str, input_format: str = "auto") -> dict:
         try:
             inventory = load_input(Path(input_path), input_format)
@@ -619,4 +625,4 @@ class Api:
                 ],
             }
         except Exception as e:
-            return {"ok": False, "error": str(e)} 
+            return {"ok": False, "error": str(e)}

@@ -22,6 +22,7 @@ from nvd_vault.core.vault_builder import VaultBuilder
 
 logger = logging.getLogger(__name__)
 
+
 def setup_windows_app_id() -> None:
     """
     Устанавливает уникальный AppUserModelID и иконку для панели задач Windows.
@@ -65,6 +66,7 @@ def run_gui() -> None:
         icon=str(icon_path) if icon_path.exists() else None,
     )
 
+
 def validate_build_paths(inventory_path: Path, vault_path: Path) -> None:
     if not inventory_path.exists():
         raise FileNotFoundError(f"Inventory не найден: {inventory_path}")
@@ -77,6 +79,7 @@ def validate_build_paths(inventory_path: Path, vault_path: Path) -> None:
 
     if vault_path.exists() and not vault_path.is_dir():
         raise ValueError(f"Путь для vault уже существует и не является папкой: {vault_path}")
+
 
 def run_build_command(args: argparse.Namespace) -> int:
     """Собрать vault из inventory.json в CLI-режиме."""
@@ -131,6 +134,7 @@ def run_build_command(args: argparse.Namespace) -> int:
     print(f"  CWEs: {meta['cwes_count']}")
     return 0
 
+
 def run_cache_command(args: argparse.Namespace) -> int:
     from nvd_vault.core.nvd_cache import NvdCache
 
@@ -151,6 +155,7 @@ def run_cache_command(args: argparse.Namespace) -> int:
 
     print("Использование: nvd-vault cache {stats|clear}")
     return 1
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(

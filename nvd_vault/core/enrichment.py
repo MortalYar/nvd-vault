@@ -7,10 +7,7 @@ import requests
 
 
 EPSS_API_URL = "https://api.first.org/data/v1/epss"
-KEV_FEED_URL = (
-    "https://www.cisa.gov/sites/default/files/feeds/"
-    "known_exploited_vulnerabilities.json"
-)
+KEV_FEED_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 EPSS_BATCH_SIZE = 100  # API принимает до ~100 CVE за раз через csv
 
 
@@ -19,9 +16,7 @@ class EnrichmentClient:
 
     def __init__(self, timeout: int = 30):
         self.session = requests.Session()
-        self.session.headers["User-Agent"] = (
-            "Mozilla/5.0 (compatible; nvd-vault/1.0)"
-        )
+        self.session.headers["User-Agent"] = "Mozilla/5.0 (compatible; nvd-vault/1.0)"
         self.timeout = timeout
 
     def fetch_epss_batch(self, cve_ids: list[str]) -> dict[str, dict]:
@@ -36,12 +31,11 @@ class EnrichmentClient:
 
         # Бьём на батчи -- API ограничивает длину query string
         for i in range(0, len(cve_ids), EPSS_BATCH_SIZE):
-            batch = cve_ids[i:i + EPSS_BATCH_SIZE]
+            batch = cve_ids[i : i + EPSS_BATCH_SIZE]
             params = {"cve": ",".join(batch)}
 
             try:
-                resp = self.session.get(EPSS_API_URL, params=params,
-                                        timeout=self.timeout)
+                resp = self.session.get(EPSS_API_URL, params=params, timeout=self.timeout)
             except requests.RequestException:
                 # Сетевая ошибка -- не фейлим, просто эти CVE будут без EPSS
                 continue
@@ -103,14 +97,13 @@ class EnrichmentClient:
                 "kev_due": item.get("dueDate"),
                 "kev_action": item.get("requiredAction"),
                 "kev_name": item.get("vulnerabilityName"),
-                "kev_known_ransomware": (
-                    item.get("knownRansomwareCampaignUse") == "Known"
-                ),
+                "kev_known_ransomware": (item.get("knownRansomwareCampaignUse") == "Known"),
             }
         return result
 
 
 # ---------- Risk scoring ----------
+
 
 def compute_risk_score(
     cvss_score: Optional[float],
@@ -130,7 +123,7 @@ def compute_risk_score(
         medium          -- CVSS >= 5
         low             -- остальное
     """
-    
+
     # Clamp значения в допустимые диапазоны: CVSS [0, 10], EPSS [0, 1]
     # Защищает от мусорных данных и гарантирует корректные формулы
     cvss = max(0.0, min(10.0, cvss_score or 0.0))

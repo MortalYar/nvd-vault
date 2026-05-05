@@ -66,7 +66,8 @@ class SearchIndex:
         try:
             with self._lock:
                 cur = self.conn.cursor()
-                cur.execute("""
+                cur.execute(
+                    """
                     SELECT
                         relative_path,
                         folder,
@@ -78,17 +79,21 @@ class SearchIndex:
                     WHERE notes MATCH ?
                     ORDER BY rank
                     LIMIT ?
-                """, (clean_query, limit))
+                """,
+                    (clean_query, limit),
+                )
 
                 results = []
                 for row in cur.fetchall():
-                    results.append({
-                        "relative_path": row["relative_path"],
-                        "folder": row["folder"],
-                        "name": row["name"],
-                        "title": row["title"] or row["name"],
-                        "excerpt": row["excerpt"],
-                    })
+                    results.append(
+                        {
+                            "relative_path": row["relative_path"],
+                            "folder": row["folder"],
+                            "name": row["name"],
+                            "title": row["title"] or row["name"],
+                            "excerpt": row["excerpt"],
+                        }
+                    )
                 return results
         except sqlite3.OperationalError as e:
             return [{"error": f"Некорректный запрос: {e}"}]

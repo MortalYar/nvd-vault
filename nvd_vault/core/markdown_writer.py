@@ -2,6 +2,7 @@
 
 from .models import Vulnerability
 
+
 def _yaml_str(value: str) -> str:
     """Возвращает значение, готовое к записи в YAML-frontmatter.
 
@@ -23,6 +24,7 @@ def _yaml_str(value: str) -> str:
 def _yaml_list(items: list) -> str:
     """Сериализует список в YAML inline-формат: [a, b, "c, d"]."""
     return "[" + ", ".join(_yaml_str(item) for item in items) + "]"
+
 
 def severity_tag(severity: str | None) -> str:
     """CRITICAL -> 'critical' для тегов."""
@@ -47,7 +49,7 @@ def render_cve_note(vuln: Vulnerability, products_for_cve: list[str]) -> str:
     lines.append(f"cwes: {_yaml_list(vuln.weaknesses)}")
     lines.append(f"kev: {str(vuln.cisa_kev).lower()}")
 
-     # EPSS
+    # EPSS
     if vuln.epss_score is not None:
         lines.append(f"epss: {vuln.epss_score:.4f}")
         lines.append(f"epss_percentile: {vuln.epss_percentile:.4f}")
@@ -88,17 +90,17 @@ def render_cve_note(vuln: Vulnerability, products_for_cve: list[str]) -> str:
             "low": "🟢 Низкий",
         }.get(vuln.risk_tier, vuln.risk_tier)
 
-        lines.append(f"**Приоритет:** {tier_label} · "
-                     f"**Risk Score:** {vuln.risk_score:.1f}/10")
+        lines.append(f"**Приоритет:** {tier_label} · **Risk Score:** {vuln.risk_score:.1f}/10")
         lines.append("")
 
-    lines.append(f"**Severity:** {vuln.cvss_severity or '—'} · "
-                 f"**CVSS:** {score}")
+    lines.append(f"**Severity:** {vuln.cvss_severity or '—'} · **CVSS:** {score}")
 
     if vuln.epss_score is not None:
         epss_pct = (vuln.epss_percentile or 0) * 100
-        lines.append(f"**EPSS:** {vuln.epss_score:.4f} "
-                     f"(топ {100 - epss_pct:.1f}% самых вероятных к эксплуатации)")
+        lines.append(
+            f"**EPSS:** {vuln.epss_score:.4f} "
+            f"(топ {100 - epss_pct:.1f}% самых вероятных к эксплуатации)"
+        )
 
     lines.append("")
 
@@ -174,8 +176,9 @@ def render_cve_note(vuln: Vulnerability, products_for_cve: list[str]) -> str:
     return "\n".join(lines)
 
 
-def render_product_note(product_name: str, vendor: str, version: str,
-                        cves: list[Vulnerability]) -> str:
+def render_product_note(
+    product_name: str, vendor: str, version: str, cves: list[Vulnerability]
+) -> str:
     """Карточка продукта со списком его CVE."""
     lines = ["---"]
     lines.append("type: product")
@@ -233,8 +236,7 @@ def render_cwe_note(cwe_id: str, cves_with_cwe: list[Vulnerability]) -> str:
     cwe_num = cwe_id.replace("CWE-", "")
     lines.append(f"# {cwe_id}")
     lines.append("")
-    lines.append(f"Описание типа слабости: "
-                 f"https://cwe.mitre.org/data/definitions/{cwe_num}.html")
+    lines.append(f"Описание типа слабости: https://cwe.mitre.org/data/definitions/{cwe_num}.html")
     lines.append("")
     lines.append(f"**Количество CVE этого типа в vault:** {len(cves_with_cwe)}")
     lines.append("")

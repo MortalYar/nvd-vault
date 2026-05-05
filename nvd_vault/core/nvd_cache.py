@@ -24,9 +24,7 @@ DEFAULT_TTL_SECONDS = 24 * 60 * 60  # 24 часа
 def default_cache_dir() -> Path:
     """Стандартный путь для кэша на текущей платформе."""
     if os.name == "nt":  # Windows
-        base = Path(
-            os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")
-        )
+        base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
         return base / "nvd-vault" / "cache"
     # Linux/macOS — XDG-style ~/.cache/nvd-vault
     xdg = os.environ.get("XDG_CACHE_HOME")

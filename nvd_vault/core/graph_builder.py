@@ -5,6 +5,7 @@ from typing import Optional
 
 from .frontmatter import read_frontmatter
 
+
 def build_graph(vault_path: Path) -> dict:
     """
     Сканирует vault и собирает структуру для cytoscape.js.
@@ -21,17 +22,19 @@ def build_graph(vault_path: Path) -> dict:
             fm = read_frontmatter(f)
             node_id = f"product:{f.stem}"
             seen_nodes.add(node_id)
-            nodes.append({
-                "data": {
-                    "id": node_id,
-                    "label": f.stem,
-                    "type": "product",
-                    "vendor": fm.get("vendor", ""),
-                    "version": fm.get("version", ""),
-                    "cve_count": _safe_int(fm.get("cve_count")),
-                    "relative_path": f"products/{f.name}",
+            nodes.append(
+                {
+                    "data": {
+                        "id": node_id,
+                        "label": f.stem,
+                        "type": "product",
+                        "vendor": fm.get("vendor", ""),
+                        "version": fm.get("version", ""),
+                        "cve_count": _safe_int(fm.get("cve_count")),
+                        "relative_path": f"products/{f.name}",
+                    }
                 }
-            })
+            )
 
     # ---- CWE ----
     cwes_dir = vault_path / "cwes"
@@ -40,15 +43,17 @@ def build_graph(vault_path: Path) -> dict:
             fm = read_frontmatter(f)
             node_id = f"cwe:{f.stem}"
             seen_nodes.add(node_id)
-            nodes.append({
-                "data": {
-                    "id": node_id,
-                    "label": f.stem,
-                    "type": "cwe",
-                    "cve_count": _safe_int(fm.get("cve_count")),
-                    "relative_path": f"cwes/{f.name}",
+            nodes.append(
+                {
+                    "data": {
+                        "id": node_id,
+                        "label": f.stem,
+                        "type": "cwe",
+                        "cve_count": _safe_int(fm.get("cve_count")),
+                        "relative_path": f"cwes/{f.name}",
+                    }
                 }
-            })
+            )
 
     # ---- CVE + рёбра ----
     cves_dir = vault_path / "cves"
@@ -61,43 +66,49 @@ def build_graph(vault_path: Path) -> dict:
             severity = _normalize_severity(fm.get("severity"))
             cvss = _safe_float(fm.get("cvss"))
 
-            nodes.append({
-                "data": {
-                    "id": node_id,
-                    "label": f.stem,
-                    "type": "cve",
-                    "severity": severity,
-                    "cvss": cvss,
-                    "kev": _to_bool(fm.get("kev")),
-                    "relative_path": f"cves/{f.name}",
+            nodes.append(
+                {
+                    "data": {
+                        "id": node_id,
+                        "label": f.stem,
+                        "type": "cve",
+                        "severity": severity,
+                        "cvss": cvss,
+                        "kev": _to_bool(fm.get("kev")),
+                        "relative_path": f"cves/{f.name}",
+                    }
                 }
-            })
+            )
 
             # Рёбра: CVE → продукты
             for prod_name in fm.get("products", []) or []:
                 prod_id = f"product:{prod_name}"
                 if prod_id in seen_nodes:
-                    edges.append({
-                        "data": {
-                            "id": f"e:{node_id}-{prod_id}",
-                            "source": node_id,
-                            "target": prod_id,
-                            "type": "affects",
+                    edges.append(
+                        {
+                            "data": {
+                                "id": f"e:{node_id}-{prod_id}",
+                                "source": node_id,
+                                "target": prod_id,
+                                "type": "affects",
+                            }
                         }
-                    })
+                    )
 
             # Рёбра: CVE → CWE
             for cwe_name in fm.get("cwes", []) or []:
                 cwe_id = f"cwe:{cwe_name}"
                 if cwe_id in seen_nodes:
-                    edges.append({
-                        "data": {
-                            "id": f"e:{node_id}-{cwe_id}",
-                            "source": node_id,
-                            "target": cwe_id,
-                            "type": "instance-of",
+                    edges.append(
+                        {
+                            "data": {
+                                "id": f"e:{node_id}-{cwe_id}",
+                                "source": node_id,
+                                "target": cwe_id,
+                                "type": "instance-of",
+                            }
                         }
-                    })
+                    )
 
     return {
         "nodes": nodes,
@@ -112,6 +123,7 @@ def build_graph(vault_path: Path) -> dict:
 
 
 # ---------- Утилиты ----------
+
 
 def _normalize_severity(value) -> str:
     if not value:

@@ -33,19 +33,20 @@ def load_inventory(path: Path) -> Inventory:
     products = []
     for i, item in enumerate(data["products"]):
         if "name" not in item or "version" not in item:
-            raise ValueError(
-                f"products[{i}] должен иметь поля 'name' и 'version'"
+            raise ValueError(f"products[{i}] должен иметь поля 'name' и 'version'")
+        products.append(
+            InventoryItem(
+                name=item["name"],
+                version=item["version"],
+                vendor=item.get("vendor"),
             )
-        products.append(InventoryItem(
-            name=item["name"],
-            version=item["version"],
-            vendor=item.get("vendor"),
-        ))
+        )
 
     return Inventory(
         vault_name=data.get("vault_name", "Untitled Vault"),
         products=products,
     )
+
 
 def load_input(path: Path, input_format: str = "auto") -> "Inventory":
     """Загружает входной файл (inventory или SBOM) с авто-детектом по содержимому.

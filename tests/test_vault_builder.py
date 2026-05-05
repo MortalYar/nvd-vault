@@ -28,11 +28,7 @@ class FakeNvdClient:
                         "tags": ["Exploit"],
                     }
                 ],
-                cpe_ranges=[
-                    CpeRange(
-                        criteria="cpe:2.3:a:nginx:nginx:1.24.0:*:*:*:*:*:*:*"
-                    )
-                ],
+                cpe_ranges=[CpeRange(criteria="cpe:2.3:a:nginx:nginx:1.24.0:*:*:*:*:*:*:*")],
             )
         ]
 

@@ -32,6 +32,7 @@ def build_dashboard(vault_path: Path) -> dict:
 
 # ---------- KPI ----------
 
+
 def _build_kpi(cves: list[dict]) -> dict:
     total = len(cves)
     by_tier = _count_by(cves, "risk_tier")
@@ -77,6 +78,7 @@ def _count_kev_deadlines(cves: list[dict]) -> tuple[int, int]:
 
 # ---------- Распределения ----------
 
+
 def _tier_distribution(cves: list[dict]) -> list[dict]:
     """Распределение по risk tier для bar chart."""
     counts = _count_by(cves, "risk_tier")
@@ -104,11 +106,16 @@ def _tier_distribution(cves: list[dict]) -> list[dict]:
 
 # ---------- Топы ----------
 
+
 def _top_cves(cves: list[dict], limit: int) -> list[dict]:
     """Топ CVE по risk score."""
     tier_order = {
-        "critical_now": 0, "critical_likely": 1,
-        "high": 2, "medium": 3, "low": 4, "unknown": 5,
+        "critical_now": 0,
+        "critical_likely": 1,
+        "high": 2,
+        "medium": 3,
+        "low": 4,
+        "unknown": 5,
     }
     sorted_cves = sorted(
         cves,
@@ -140,16 +147,19 @@ def _top_products(cves: list[dict], products: list[dict], limit: int) -> list[di
     for c in cves:
         tier = c.get("risk_tier")
         for prod_name in c.get("products", []):
-            entry = risk_by_product.setdefault(prod_name, {
-                "name": prod_name,
-                "critical_now": 0,
-                "critical_likely": 0,
-                "high": 0,
-                "medium": 0,
-                "low": 0,
-                "total": 0,
-                "kev": 0,
-            })
+            entry = risk_by_product.setdefault(
+                prod_name,
+                {
+                    "name": prod_name,
+                    "critical_now": 0,
+                    "critical_likely": 0,
+                    "high": 0,
+                    "medium": 0,
+                    "low": 0,
+                    "total": 0,
+                    "kev": 0,
+                },
+            )
             entry["total"] += 1
             if tier in ("critical_now", "critical_likely", "high", "medium", "low"):
                 entry[tier] += 1
@@ -160,8 +170,11 @@ def _top_products(cves: list[dict], products: list[dict], limit: int) -> list[di
     sorted_products = sorted(
         risk_by_product.values(),
         key=lambda p: (
-            -p["critical_now"], -p["critical_likely"],
-            -p["high"], -p["kev"], -p["total"],
+            -p["critical_now"],
+            -p["critical_likely"],
+            -p["high"],
+            -p["kev"],
+            -p["total"],
         ),
     )
     return sorted_products[:limit]
@@ -209,14 +222,16 @@ def _kev_deadlines(cves: list[dict], days_ahead: int) -> list[dict]:
         days = (due - today).days
         if days > days_ahead:
             continue
-        result.append({
-            "cve_id": c["cve_id"],
-            "kev_due": kev_due,
-            "days_remaining": days,
-            "overdue": days < 0,
-            "products": c.get("products", []),
-            "relative_path": f"cves/{c['cve_id']}.md",
-        })
+        result.append(
+            {
+                "cve_id": c["cve_id"],
+                "kev_due": kev_due,
+                "days_remaining": days,
+                "overdue": days < 0,
+                "products": c.get("products", []),
+                "relative_path": f"cves/{c['cve_id']}.md",
+            }
+        )
     result.sort(key=lambda x: x["days_remaining"])
     return result
 
@@ -226,16 +241,19 @@ def _ransomware_cves(cves: list[dict]) -> list[dict]:
     result = []
     for c in cves:
         if c.get("ransomware"):
-            result.append({
-                "cve_id": c["cve_id"],
-                "risk_tier": c.get("risk_tier"),
-                "products": c.get("products", []),
-                "relative_path": f"cves/{c['cve_id']}.md",
-            })
+            result.append(
+                {
+                    "cve_id": c["cve_id"],
+                    "risk_tier": c.get("risk_tier"),
+                    "products": c.get("products", []),
+                    "relative_path": f"cves/{c['cve_id']}.md",
+                }
+            )
     return result
 
 
 # ---------- Чтение vault'а ----------
+
 
 def _collect_cves(vault_path: Path) -> list[dict]:
     """Прочитать все CVE-заметки и вернуть список словарей с метаданными."""
@@ -248,18 +266,20 @@ def _collect_cves(vault_path: Path) -> list[dict]:
         fm = read_frontmatter(md_file)
         if not fm:
             continue
-        result.append({
-            "cve_id": md_file.stem,
-            "risk_tier": fm.get("risk_tier"),
-            "risk_score": _to_float(fm.get("risk_score")),
-            "cvss_score": _to_float(fm.get("cvss")),
-            "epss_score": _to_float(fm.get("epss")),
-            "kev": _to_bool(fm.get("kev")),
-            "kev_due": fm.get("kev_due"),
-            "ransomware": _to_bool(fm.get("ransomware")),
-            "products": fm.get("products") or [],
-            "cwes": fm.get("cwes") or [],
-        })
+        result.append(
+            {
+                "cve_id": md_file.stem,
+                "risk_tier": fm.get("risk_tier"),
+                "risk_score": _to_float(fm.get("risk_score")),
+                "cvss_score": _to_float(fm.get("cvss")),
+                "epss_score": _to_float(fm.get("epss")),
+                "kev": _to_bool(fm.get("kev")),
+                "kev_due": fm.get("kev_due"),
+                "ransomware": _to_bool(fm.get("ransomware")),
+                "products": fm.get("products") or [],
+                "cwes": fm.get("cwes") or [],
+            }
+        )
     return result
 
 
@@ -270,11 +290,13 @@ def _collect_products(vault_path: Path) -> list[dict]:
     result = []
     for f in products_dir.glob("*.md"):
         fm = read_frontmatter(f)
-        result.append({
-            "name": f.stem,
-            "version": fm.get("version", ""),
-            "vendor": fm.get("vendor", ""),
-        })
+        result.append(
+            {
+                "name": f.stem,
+                "version": fm.get("version", ""),
+                "vendor": fm.get("vendor", ""),
+            }
+        )
     return result
 
 
@@ -286,6 +308,7 @@ def _collect_cwes(vault_path: Path) -> list[dict]:
 
 
 # ---------- Утилиты ----------
+
 
 def _count_by(cves: list[dict], field: str) -> dict[str, int]:
     counts: dict[str, int] = {}
@@ -311,10 +334,16 @@ def _to_bool(value) -> bool:
 def _empty_dashboard() -> dict:
     return {
         "kpi": {
-            "total_cves": 0, "critical_now": 0, "critical_likely": 0,
-            "high": 0, "medium": 0, "low": 0,
-            "kev_total": 0, "ransomware_total": 0,
-            "kev_overdue": 0, "kev_due_soon": 0,
+            "total_cves": 0,
+            "critical_now": 0,
+            "critical_likely": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0,
+            "kev_total": 0,
+            "ransomware_total": 0,
+            "kev_overdue": 0,
+            "kev_due_soon": 0,
         },
         "tier_distribution": [],
         "top_cves": [],

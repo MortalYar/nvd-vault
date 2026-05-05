@@ -25,7 +25,7 @@ def parse_frontmatter(content: str) -> tuple[dict, str]:
         return {}, content
 
     yaml_text = match.group(1)
-    body = content[match.end():]
+    body = content[match.end() :]
 
     fm: dict = {}
     for line in yaml_text.split("\n"):

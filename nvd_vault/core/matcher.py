@@ -110,10 +110,14 @@ def cpe_matches_version(vuln: Vulnerability, product: str, version: str) -> bool
 
         cpe_parts = r.criteria.split(":")
         cpe_version = cpe_parts[5] if len(cpe_parts) >= 6 else "*"
-        no_range = not any([
-            r.version_start_including, r.version_start_excluding,
-            r.version_end_including, r.version_end_excluding,
-        ])
+        no_range = not any(
+            [
+                r.version_start_including,
+                r.version_start_excluding,
+                r.version_end_including,
+                r.version_end_excluding,
+            ]
+        )
 
         if no_range:
             if cpe_version in ("*", "-"):

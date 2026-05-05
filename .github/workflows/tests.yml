@@ -53,8 +53,13 @@ jobs:
       - name: Install pip-audit
         run: python -m pip install pip-audit
 
+      - name: Install project (for pip-audit)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
       - name: Run pip-audit
-        run: pip-audit --strict --disable-pip
+        run: pip-audit --strict
 
   test:
     name: Tests (Python ${{ matrix.python-version }})

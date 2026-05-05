@@ -16,7 +16,6 @@ from packaging.version import InvalidVersion, Version
 
 from .models import Vulnerability
 
-
 _TOKEN_RE = re.compile(r"(\d+)|([^\d.]+)")
 
 
@@ -67,14 +66,8 @@ def vcmp(a: str, b: str) -> int:
     чтобы гарантировать однотипность.
     """
     # Wildcard / пустые
-    if not a or a in ("*", "-"):
-        a_empty = True
-    else:
-        a_empty = False
-    if not b or b in ("*", "-"):
-        b_empty = True
-    else:
-        b_empty = False
+    a_empty = not a or a in ("*", "-")
+    b_empty = not b or b in ("*", "-")
 
     if a_empty and b_empty:
         return 0

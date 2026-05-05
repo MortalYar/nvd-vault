@@ -1,7 +1,6 @@
 """Построение узлов и рёбер графа из vault'а."""
 
 from pathlib import Path
-from typing import Optional
 
 from .frontmatter import read_frontmatter
 
@@ -131,7 +130,7 @@ def _normalize_severity(value) -> str:
     return str(value).lower()
 
 
-def _safe_float(value) -> Optional[float]:
+def _safe_float(value) -> float | None:
     if value is None or value == "null":
         return None
     try:

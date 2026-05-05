@@ -8,7 +8,6 @@ import pytest
 
 from nvd_vault.core.enrichment import compute_risk_score
 
-
 # ---------- Tier 1: critical_now (KEV-listed) ----------
 
 

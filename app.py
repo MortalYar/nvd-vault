@@ -9,15 +9,15 @@
     nvd-vault build examples/sample_inventory.json --out vault/
 """
 
+import argparse
 import json
 import logging
-import argparse
 import os
 import sys
 from pathlib import Path
 
-from nvd_vault.core.logging_config import setup_logging
 from nvd_vault.core.inventory import load_input
+from nvd_vault.core.logging_config import setup_logging
 from nvd_vault.core.vault_builder import VaultBuilder
 
 logger = logging.getLogger(__name__)

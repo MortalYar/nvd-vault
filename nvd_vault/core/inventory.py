@@ -3,14 +3,13 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
 class InventoryItem:
     name: str
     version: str
-    vendor: Optional[str] = None
+    vendor: str | None = None
 
 
 @dataclass

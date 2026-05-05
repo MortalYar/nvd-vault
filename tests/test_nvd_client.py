@@ -1,8 +1,8 @@
 import pytest
 import requests
 
-from nvd_vault.core.nvd_client import NVD_CPE_URL, NvdClient
 from nvd_vault.core.models import Vulnerability
+from nvd_vault.core.nvd_client import NVD_CPE_URL, NvdClient
 
 
 class FakeResponse:

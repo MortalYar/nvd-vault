@@ -2,26 +2,24 @@
 
 import json
 import os
-import re
 import subprocess
 import sys
 import threading
 import time
 import zipfile
 from pathlib import Path
-from typing import Optional
 
 import webview
 
-from nvd_vault.core.frontmatter import parse_frontmatter, read_frontmatter
-from nvd_vault.core.remediation import build_remediation_plan
 from nvd_vault.core.dashboard import build_dashboard
 from nvd_vault.core.enrichment import EnrichmentClient, compute_risk_score
+from nvd_vault.core.frontmatter import parse_frontmatter, read_frontmatter
 from nvd_vault.core.graph_builder import build_graph
-from nvd_vault.core.search_index import SearchIndex
 from nvd_vault.core.inventory import load_input
 from nvd_vault.core.matcher import cpe_matches_version
 from nvd_vault.core.nvd_client import NvdClient
+from nvd_vault.core.remediation import build_remediation_plan
+from nvd_vault.core.search_index import SearchIndex
 from nvd_vault.core.vault_builder import VaultBuilder
 
 
@@ -29,9 +27,9 @@ class Api:
     def __init__(self) -> None:
         self._progress_log: list[str] = []
         self._build_running = False
-        self._current_vault: Optional[Path] = None
-        self._search_index: Optional[SearchIndex] = None
-        self._kev_cache: Optional[dict] = None
+        self._current_vault: Path | None = None
+        self._search_index: SearchIndex | None = None
+        self._kev_cache: dict | None = None
         self._kev_cache_at: float = 0.0
 
     def _get_kev_data(self, ttl_seconds: int = 3600) -> dict:
@@ -173,8 +171,8 @@ class Api:
         self,
         product: str,
         version: str,
-        vendor: Optional[str] = None,
-        api_key: Optional[str] = None,
+        vendor: str | None = None,
+        api_key: str | None = None,
     ) -> dict:
         try:
             client = NvdClient(api_key=api_key or None)
@@ -263,7 +261,7 @@ class Api:
         self,
         inventory_path: str,
         vault_path: str,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         input_format: str = "auto",
     ) -> dict:
         if self._build_running:
@@ -443,11 +441,11 @@ class Api:
         if not self._current_vault:
             return {"ok": False, "error": "Vault не открыт"}
 
-        results: dict[str, Optional[str]] = {}
+        results: dict[str, str | None] = {}
         for link in links:
             if link in results:
                 continue
-            found_path: Optional[str] = None
+            found_path: str | None = None
             for subfolder in ("products", "cves", "cwes"):
                 candidate = self._current_vault / subfolder / f"{link}.md"
                 if candidate.exists():

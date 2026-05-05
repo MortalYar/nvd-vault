@@ -2,7 +2,6 @@ from pathlib import Path
 
 from nvd_vault.core.frontmatter import read_frontmatter
 
-
 TIER_WEIGHT = {
     "critical_now": 100,
     "critical_likely": 80,

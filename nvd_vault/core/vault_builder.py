@@ -1,25 +1,25 @@
 """Создание структуры vault на диске."""
 
 import json
-from datetime import datetime, UTC
+from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable, Optional
 
 from .enrichment import EnrichmentClient, compute_risk_score
 from .inventory import Inventory
 from .markdown_writer import render_cve_note, render_cwe_note, render_product_note
 from .matcher import cpe_matches_version
 from .models import Vulnerability
-from .nvd_client import NvdClient
 from .nvd_cache import NvdCache
+from .nvd_client import NvdClient
 
 
 class VaultBuilder:
     def __init__(
         self,
         vault_path: Path,
-        api_key: Optional[str] = None,
-        progress_callback: Optional[Callable[[str], None]] = None,
+        api_key: str | None = None,
+        progress_callback: Callable[[str], None] | None = None,
         use_cache: bool = True,
     ):
         self.vault_path = vault_path

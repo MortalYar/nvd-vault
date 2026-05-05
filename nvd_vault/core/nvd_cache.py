@@ -14,7 +14,6 @@ import os
 import re
 import time
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ class NvdCache:
 
     def __init__(
         self,
-        cache_dir: Optional[Path] = None,
+        cache_dir: Path | None = None,
         ttl_seconds: int = DEFAULT_TTL_SECONDS,
     ) -> None:
         self.cache_dir = cache_dir or default_cache_dir()
@@ -57,7 +56,7 @@ class NvdCache:
     def _path(self, key: str) -> Path:
         return self.cache_dir / f"{_sanitize_key(key)}.json"
 
-    def get(self, key: str) -> Optional[dict]:
+    def get(self, key: str) -> dict | None:
         """Возвращает данные если кэш свежий, иначе None."""
         path = self._path(key)
         if not path.exists():

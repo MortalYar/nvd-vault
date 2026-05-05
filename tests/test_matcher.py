@@ -1,7 +1,6 @@
 from nvd_vault.core.matcher import (
     cpe_matches_version,
     extract_product_from_cpe,
-    parse_version,
     vcmp,
 )
 from nvd_vault.core.models import CpeRange, Vulnerability

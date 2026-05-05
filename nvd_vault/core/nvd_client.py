@@ -1,8 +1,8 @@
 """HTTP-клиент NVD API 2.0."""
 
-import time
 import logging
-from typing import Optional
+import time
+
 import requests
 
 from .models import CpeRange, Vulnerability
@@ -27,8 +27,8 @@ MIN_INTERVAL_WITH_KEY = 0.7
 class NvdClient:
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        cache: Optional[NvdCache] = None,
+        api_key: str | None = None,
+        cache: NvdCache | None = None,
     ):
         self.session = requests.Session()
         self.session.headers["User-Agent"] = "Mozilla/5.0 (compatible; nvd-vault/1.0)"
@@ -91,7 +91,7 @@ class NvdClient:
 
             # 429 Too Many Requests
             if r.status_code == 429:
-                last_error = requests.HTTPError(f"HTTP 429 Too Many Requests")
+                last_error = requests.HTTPError("HTTP 429 Too Many Requests")
                 if attempt < REQUEST_RETRIES:
                     logger.warning(
                         "NVD: 429 Too Many Requests, retrying %s/%s",
@@ -215,7 +215,7 @@ class NvdClient:
         return results
 
     @staticmethod
-    def _parse_cve(cve: dict) -> Optional[Vulnerability]:
+    def _parse_cve(cve: dict) -> Vulnerability | None:
         cve_id = cve.get("id")
         if not cve_id:
             return None

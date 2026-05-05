@@ -1,10 +1,9 @@
 """SQLite FTS5 индекс для полнотекстового поиска по vault."""
 
-import threading
 import re
 import sqlite3
+import threading
 from pathlib import Path
-from typing import Optional
 
 from .frontmatter import parse_frontmatter
 
@@ -13,8 +12,8 @@ class SearchIndex:
     """Хранит FTS5-индекс по содержимому заметок vault."""
 
     def __init__(self) -> None:
-        self.conn: Optional[sqlite3.Connection] = None
-        self._vault_path: Optional[Path] = None
+        self.conn: sqlite3.Connection | None = None
+        self._vault_path: Path | None = None
         self._lock = threading.Lock()
 
     def build(self, vault_path: Path) -> dict:

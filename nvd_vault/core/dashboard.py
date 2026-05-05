@@ -2,7 +2,6 @@
 
 from datetime import date, datetime
 from pathlib import Path
-from typing import Optional
 
 from .frontmatter import read_frontmatter
 
@@ -318,7 +317,7 @@ def _count_by(cves: list[dict], field: str) -> dict[str, int]:
     return counts
 
 
-def _to_float(value) -> Optional[float]:
+def _to_float(value) -> float | None:
     if value is None:
         return None
     try:

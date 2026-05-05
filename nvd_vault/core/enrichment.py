@@ -1,10 +1,8 @@
 """Обогащение CVE данными из EPSS и CISA KEV."""
 
 import time
-from typing import Optional
 
 import requests
-
 
 EPSS_API_URL = "https://api.first.org/data/v1/epss"
 KEV_FEED_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
@@ -106,8 +104,8 @@ class EnrichmentClient:
 
 
 def compute_risk_score(
-    cvss_score: Optional[float],
-    epss_score: Optional[float],
+    cvss_score: float | None,
+    epss_score: float | None,
     is_kev: bool,
     kev_known_ransomware: bool = False,
 ) -> dict:

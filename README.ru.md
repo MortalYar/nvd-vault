@@ -6,6 +6,7 @@
 
 На вход подаётся `inventory.json` или SBOM (CycloneDX / SPDX). На выходе — **vault** в формате Markdown-заметок со ссылками между CVE / продуктами / CWE, плюс встроенный браузер с поиском, графом связей и аналитическим дашбордом.
 
+[![Latest release](https://img.shields.io/github/v/release/MortalYar/nvd-vault)](https://github.com/MortalYar/nvd-vault/releases/latest)
 ![Python](https://img.shields.io/badge/python-3.11+-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-windows-lightgrey)

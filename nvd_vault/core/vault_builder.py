@@ -5,6 +5,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
+from .path_safety import safe_filename_stem
 from .enrichment import EnrichmentClient, compute_risk_score
 from .inventory import Inventory
 from .markdown_writer import render_cve_note, render_cwe_note, render_product_note
@@ -108,7 +109,8 @@ class VaultBuilder:
 
         for cve_id, vuln in all_cves.items():
             content = render_cve_note(vuln, cve_to_products.get(cve_id, []))
-            (self.vault_path / "cves" / f"{cve_id}.md").write_text(content, encoding="utf-8")
+            stem = safe_filename_stem(cve_id, fallback="cve")
+            (self.vault_path / "cves" / f"{stem}.md").write_text(content, encoding="utf-8")
 
         for item in inventory.products:
             if item.name not in product_to_cves:
@@ -117,7 +119,8 @@ class VaultBuilder:
             content = render_product_note(
                 item.name, vendor, item.version, product_to_cves[item.name]
             )
-            (self.vault_path / "products" / f"{item.name}.md").write_text(content, encoding="utf-8")
+            stem = safe_filename_stem(item.name, fallback="product")
+            (self.vault_path / "products" / f"{stem}.md").write_text(content, encoding="utf-8")
 
         cwe_to_cves: dict[str, list[Vulnerability]] = {}
         for vuln in all_cves.values():
@@ -125,7 +128,8 @@ class VaultBuilder:
                 cwe_to_cves.setdefault(cwe, []).append(vuln)
         for cwe_id, cves in cwe_to_cves.items():
             content = render_cwe_note(cwe_id, cves)
-            (self.vault_path / "cwes" / f"{cwe_id}.md").write_text(content, encoding="utf-8")
+            stem = safe_filename_stem(cwe_id, fallback="cwe")
+            (self.vault_path / "cwes" / f"{stem}.md").write_text(content, encoding="utf-8")
 
         meta = {
             "vault_name": inventory.vault_name,

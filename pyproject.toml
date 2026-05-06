@@ -12,11 +12,49 @@ license = { file = "LICENSE" }
 authors = [
     { name = "MortalYar" }
 ]
+keywords = [
+    "vulnerability",
+    "security",
+    "cve",
+    "nvd",
+    "epss",
+    "cisa-kev",
+    "sbom",
+    "vulnerability-management",
+    "security-tools",
+    "audit",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: X11 Applications :: Qt",
+    "Environment :: Win32 (MS Windows)",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Systems Administration",
+]
 dependencies = [
     "pywebview>=6.0",
     "requests>=2.28",
     "packaging>=23.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/MortalYar/nvd-vault"
+Repository = "https://github.com/MortalYar/nvd-vault"
+Issues = "https://github.com/MortalYar/nvd-vault/issues"
+Documentation = "https://github.com/MortalYar/nvd-vault#readme"
+Changelog = "https://github.com/MortalYar/nvd-vault/releases"
+"Security Policy" = "https://github.com/MortalYar/nvd-vault/blob/main/SECURITY.md"
 
 [project.optional-dependencies]
 dev = [

@@ -6,11 +6,12 @@
 
 На вход подаётся `inventory.json` или SBOM (CycloneDX / SPDX). На выходе — **vault** в формате Markdown-заметок со ссылками между CVE / продуктами / CWE, плюс встроенный браузер с поиском, графом связей и аналитическим дашбордом.
 
-[![Latest release](https://img.shields.io/github/v/release/MortalYar/nvd-vault)](https://github.com/MortalYar/nvd-vault/releases/latest)
-![Python](https://img.shields.io/badge/python-3.11+-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Platform](https://img.shields.io/badge/platform-windows-lightgrey)
-![CI](https://github.com/MortalYar/nvd-vault/actions/workflows/tests.yml/badge.svg)
+[![Tests](https://github.com/MortalYar/nvd-vault/actions/workflows/tests.yml/badge.svg)](https://github.com/MortalYar/nvd-vault/actions/workflows/tests.yml)
+[![CodeQL](https://github.com/MortalYar/nvd-vault/actions/workflows/codeql.yml/badge.svg)](https://github.com/MortalYar/nvd-vault/actions/workflows/codeql.yml)
+[![Latest release](https://img.shields.io/github/v/release/MortalYar/nvd-vault?label=release&color=blue)](https://github.com/MortalYar/nvd-vault/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/downloads/)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://github.com/MortalYar/nvd-vault#requirements)
 
 ---
 

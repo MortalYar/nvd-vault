@@ -13,7 +13,10 @@ import re
 # Зарезервированные имена устройств в Windows.
 # Файл с любым из них (даже с расширением, e.g. CON.txt) недоступен.
 _WINDOWS_RESERVED = {
-    "con", "prn", "aux", "nul",
+    "con",
+    "prn",
+    "aux",
+    "nul",
     *(f"com{i}" for i in range(1, 10)),
     *(f"lpt{i}" for i in range(1, 10)),
 }

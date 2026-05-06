@@ -16,6 +16,7 @@ def test_path_traversal_neutralized():
     assert safe_filename_stem("..") == "untitled"
     assert safe_filename_stem(".") == "untitled"
 
+
 def test_pure_traversal_inputs_are_safe():
     """Любой ввод из одних точек/слэшей не должен возвращать
     traversal-сегмент или пустоту. Конкретное значение — деталь реализации."""
@@ -24,6 +25,7 @@ def test_pure_traversal_inputs_are_safe():
         assert result not in ("", ".", "..")
         assert "/" not in result
         assert "\\" not in result
+
 
 def test_path_separators_replaced():
     assert "/" not in safe_filename_stem("foo/bar")

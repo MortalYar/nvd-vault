@@ -17,10 +17,11 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@bcc6241fb3f725642e130ea90f590d8d273da42b # v6.0.2
+
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@d87cb779c1857bd339b7663d9415b9cc9bbe25a3 # v6.2.0
         with:
           python-version: "3.13"
           cache: "pip"
@@ -41,10 +42,10 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@bcc6241fb3f725642e130ea90f590d8d273da42b # v6.0.2
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@d87cb779c1857bd339b7663d9415b9cc9bbe25a3 # v6.2.0
         with:
           python-version: "3.13"
           cache: "pip"
@@ -73,10 +74,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@bcc6241fb3f725642e130ea90f590d8d273da42b # v6.0.2
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@d87cb779c1857bd339b7663d9415b9cc9bbe25a3 # v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"

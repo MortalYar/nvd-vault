@@ -1,6 +1,8 @@
 """Создание структуры vault на диске."""
 
 import json
+import logging
+import re
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -13,6 +15,14 @@ from .models import Vulnerability
 from .nvd_cache import NvdCache
 from .nvd_client import NvdClient
 from .path_safety import safe_filename_stem
+
+logger = logging.getLogger(__name__)
+
+# Канонические форматы идентификаторов уязвимостей и слабостей.
+# CVE: 'CVE-YYYY-N+' (4-значный год, 4+ цифр номера — на самом деле может быть >7)
+# CWE: 'CWE-N+'
+_CVE_ID_RE = re.compile(r"^CVE-\d{4}-\d{4,}$")
+_CWE_ID_RE = re.compile(r"^CWE-\d+$")
 
 
 class VaultBuilder:
@@ -108,6 +118,9 @@ class VaultBuilder:
         self.progress("Генерирую vault...")
 
         for cve_id, vuln in all_cves.items():
+            if not _CVE_ID_RE.match(cve_id):
+                logger.warning("Пропущен CVE с некорректным id: %r", cve_id)
+                continue
             content = render_cve_note(vuln, cve_to_products.get(cve_id, []))
             stem = safe_filename_stem(cve_id, fallback="cve")
             (self.vault_path / "cves" / f"{stem}.md").write_text(content, encoding="utf-8")
@@ -127,6 +140,9 @@ class VaultBuilder:
             for cwe in vuln.weaknesses:
                 cwe_to_cves.setdefault(cwe, []).append(vuln)
         for cwe_id, cves in cwe_to_cves.items():
+            if not _CWE_ID_RE.match(cwe_id):
+                logger.warning("Пропущен CWE с некорректным id: %r", cwe_id)
+                continue
             content = render_cwe_note(cwe_id, cves)
             stem = safe_filename_stem(cwe_id, fallback="cwe")
             (self.vault_path / "cwes" / f"{stem}.md").write_text(content, encoding="utf-8")

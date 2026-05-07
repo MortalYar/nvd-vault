@@ -1,5 +1,7 @@
 """API, доступное из JavaScript через window.pywebview.api."""
 
+import base64
+import binascii
 import json
 import os
 import subprocess
@@ -95,7 +97,7 @@ class Api:
         return "pong: связь с Python работает"
 
     @staticmethod
-    def _normalize_dialog_result(result) -> str | None:
+    def _normalize_dialog_result(result: object) -> str | None:
         """Pywebview create_file_dialog возвращает разные типы в зависимости от версии:
         tuple/list для OPEN, str для SAVE на части платформ. Нормализуем к str|None.
         """
@@ -105,9 +107,10 @@ class Api:
             return result
         # tuple/list — берём первый элемент
         try:
-            return result[0]
-        except (IndexError, TypeError):
+            first = result[0]  # type: ignore[index]
+        except (IndexError, TypeError, KeyError):
             return None
+        return first if isinstance(first, str) else None
 
     # Расширения, которые могут привести к выполнению кода при "открытии"
     _EXECUTABLE_SUFFIXES = frozenset(
@@ -657,7 +660,6 @@ class Api:
 
     def save_graph_png(self, png_path: str, data_uri: str) -> dict:
         """Сохранить PNG-картинку графа на диск из Data URI."""
-        import base64
 
         # Защита от мусорных входных данных (limit ~50 MB на data URI)
         if len(data_uri) > GRAPH_PNG_MAX_SIZE_BYTES:
@@ -675,7 +677,7 @@ class Api:
 
             try:
                 png_bytes = base64.b64decode(encoded, validate=True)
-            except (ValueError, base64.binascii.Error) as e:
+            except (ValueError, binascii.Error) as e:
                 return {"ok": False, "error": f"Не удалось декодировать base64: {e}"}
 
             # Проверка PNG-сигнатуры

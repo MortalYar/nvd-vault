@@ -22,6 +22,25 @@ from nvd_vault.core.remediation import build_remediation_plan
 from nvd_vault.core.search_index import SearchIndex
 from nvd_vault.core.vault_builder import VaultBuilder
 
+# ----- Конфигурация (для UI и API limits) -----
+
+# Сколько кандидат-vendor'ов вернуть пользователю на выбор в UI
+VENDOR_DISCOVERY_LIMIT = 10
+# Сколько продуктов показать в превью inventory/SBOM перед полной сборкой
+PREVIEW_PRODUCTS_LIMIT = 10
+# Обрезание описания CVE для отображения в карточке (полный текст — в .md заметке)
+CVE_DESCRIPTION_PREVIEW_CHARS = 300
+# Минимальная длина поискового запроса (защита от пустых FTS-запросов)
+SEARCH_MIN_QUERY_LENGTH = 2
+# Сколько результатов поиска вернуть в UI за один запрос
+SEARCH_RESULTS_LIMIT = 50
+# Максимальная длина пользовательского имени vault (для UI и meta.json)
+VAULT_NAME_MAX_LENGTH = 200
+# Максимальный размер data URI для PNG-экспорта графа (защита от мусора из JS)
+GRAPH_PNG_MAX_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB
+# TTL кэша CISA KEV-каталога в памяти Api
+KEV_CACHE_TTL_SECONDS = 3600  # 1 час
+
 
 class Api:
     def __init__(self) -> None:
@@ -36,7 +55,7 @@ class Api:
         self._nvd_client_key: str | None = None
         self._enricher: EnrichmentClient | None = None
 
-    def _get_kev_data(self, ttl_seconds: int = 3600) -> dict:
+    def _get_kev_data(self, ttl_seconds: int = KEV_CACHE_TTL_SECONDS) -> dict:
         """Возвращает CISA KEV-каталог с кэшем (TTL по умолчанию — 1 час)."""
         # Fast path: кэш ещё свежий, лок не нужен.
         now = time.monotonic()
@@ -247,7 +266,7 @@ class Api:
         try:
             client = self._get_nvd_client()
             vendors = client.discover_vendors(product.strip())
-            return {"ok": True, "vendors": vendors[:10]}
+            return {"ok": True, "vendors": vendors[:VENDOR_DISCOVERY_LIMIT]}
         except RuntimeError as e:
             return {"ok": False, "error": str(e)}
         except Exception as e:
@@ -333,7 +352,7 @@ class Api:
                         "cve_id": v.cve_id,
                         "severity": v.cvss_severity,
                         "score": v.cvss_score,
-                        "description": v.description_en[:300],
+                        "description": v.description_en[:CVE_DESCRIPTION_PREVIEW_CHARS],
                         "published": v.published,
                         "cisa_kev": v.cisa_kev,
                         "epss_score": v.epss_score,
@@ -364,7 +383,11 @@ class Api:
 
         try:
             inventory = load_input(Path(inventory_path), input_format)
-        except (FileNotFoundError, ValueError) as e:
+        except FileNotFoundError as e:
+            return {"ok": False, "error": str(e)}
+        except json.JSONDecodeError as e:
+            return {"ok": False, "error": f"Битый JSON: {e}"}
+        except ValueError as e:
             return {"ok": False, "error": str(e)}
 
         self._progress_log = []
@@ -432,8 +455,11 @@ class Api:
         new_name = (new_name or "").strip()
         if not new_name:
             return {"ok": False, "error": "Имя не может быть пустым"}
-        if len(new_name) > 200:
-            return {"ok": False, "error": "Имя слишком длинное (>200 символов)"}
+        if len(new_name) > VAULT_NAME_MAX_LENGTH:
+            return {
+                "ok": False,
+                "error": f"Имя слишком длинное (>{VAULT_NAME_MAX_LENGTH} символов)",
+            }
 
         meta_file = self._current_vault / "meta.json"
         if not meta_file.exists():
@@ -564,10 +590,10 @@ class Api:
             return {"ok": False, "error": "Индекс не построен"}
 
         query = (query or "").strip()
-        if len(query) < 2:
+        if len(query) < SEARCH_MIN_QUERY_LENGTH:
             return {"ok": True, "results": [], "query": query}
 
-        results = self._search_index.search(query, limit=50)
+        results = self._search_index.search(query, limit=SEARCH_RESULTS_LIMIT)
         return {"ok": True, "results": results, "query": query}
 
     def get_dashboard(self) -> dict:
@@ -634,8 +660,9 @@ class Api:
         import base64
 
         # Защита от мусорных входных данных (limit ~50 MB на data URI)
-        if len(data_uri) > 50 * 1024 * 1024:
-            return {"ok": False, "error": "Картинка слишком большая (>50 MB)"}
+        if len(data_uri) > GRAPH_PNG_MAX_SIZE_BYTES:
+            mb = GRAPH_PNG_MAX_SIZE_BYTES // (1024 * 1024)
+            return {"ok": False, "error": f"Картинка слишком большая (>{mb} MB)"}
 
         try:
             # Data URI формата "data:image/png;base64,iVBORw0KG..."
@@ -726,7 +753,7 @@ class Api:
                         "version": p.version,
                         "vendor": p.vendor,
                     }
-                    for p in inventory.products[:10]
+                    for p in inventory.products[:PREVIEW_PRODUCTS_LIMIT]
                 ],
             }
         except Exception as e:

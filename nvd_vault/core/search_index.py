@@ -106,6 +106,8 @@ class SearchIndex:
     # ---------- Внутренние ----------
 
     def _index_file(self, path: Path, folder: str) -> None:
+        assert self.conn is not None, "_index_file called before open()"
+
         try:
             content = path.read_text(encoding="utf-8")
         except Exception:

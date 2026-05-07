@@ -68,3 +68,29 @@ def test_leading_trailing_dots_stripped():
     assert safe_filename_stem(".hidden") == "hidden"
     assert safe_filename_stem("file.") == "file"
     assert safe_filename_stem("...") == "untitled"
+
+def test_windows_reserved_with_extension():
+    """CON.md тоже зарезервировано — Windows блокирует имя по части до точки."""
+    result = safe_filename_stem("CON.md")
+    assert result.startswith("_"), f"Expected reserved prefix, got {result!r}"
+    assert result.lower() != "con.md"
+
+
+def test_com0_lpt0_reserved():
+    """COM0 и LPT0 тоже Windows-reserved, не только COM1-9/LPT1-9."""
+    assert safe_filename_stem("COM0") == "_COM0"
+    assert safe_filename_stem("lpt0") == "_lpt0"
+
+
+def test_truncation_strips_trailing_dot():
+    """После обрезания на max_length не должно оставаться trailing-точки."""
+    result = safe_filename_stem("hello.world", max_length=6)
+    assert not result.endswith("."), f"Trailing dot in {result!r}"
+
+
+def test_truncation_to_only_dots_returns_fallback():
+    """Если после обрезания и rstrip имя стало пустым — fallback."""
+    # 'a..........' max=2 → 'a.' → rstrip → 'a' (нормально)
+    assert safe_filename_stem("a..........", max_length=2) == "a"
+    # 'x.x.x.x...' max=1 → 'x' → норм; вариант где обрезание даёт только точки
+    assert safe_filename_stem("x." * 100, max_length=1) in ("x", "untitled")

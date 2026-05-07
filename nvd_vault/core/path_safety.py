@@ -17,8 +17,8 @@ _WINDOWS_RESERVED = {
     "prn",
     "aux",
     "nul",
-    *(f"com{i}" for i in range(1, 10)),
-    *(f"lpt{i}" for i in range(1, 10)),
+    *(f"com{i}" for i in range(0, 10)),
+    *(f"lpt{i}" for i in range(0, 10)),
 }
 
 # Запрещённые символы: разделители путей, спецсимволы Windows, управляющие.
@@ -50,11 +50,14 @@ def safe_filename_stem(value: str, fallback: str = "untitled", max_length: int =
         return fallback
 
     # Windows-reserved (case-insensitive)
-    if name.lower() in _WINDOWS_RESERVED:
+    stem_part = name.split(".", 1)[0].lower()
+    if stem_part in _WINDOWS_RESERVED:
         name = f"_{name}"
 
     # Длина
     if len(name) > max_length:
-        name = name[:max_length]
+        name = name[:max_length].rstrip(". ")
+        if not name:
+            return fallback
 
     return name

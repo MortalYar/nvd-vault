@@ -32,6 +32,9 @@ class Api:
         self._kev_cache: dict | None = None
         self._kev_cache_at: float = 0.0
         self._kev_lock = threading.Lock()
+        self._nvd_client: NvdClient | None = None
+        self._nvd_client_key: str | None = None
+        self._enricher: EnrichmentClient | None = None
 
     def _get_kev_data(self, ttl_seconds: int = 3600) -> dict:
         """Возвращает CISA KEV-каталог с кэшем (TTL по умолчанию — 1 час)."""
@@ -46,15 +49,46 @@ class Api:
             if self._kev_cache is not None and (now - self._kev_cache_at) < ttl_seconds:
                 return self._kev_cache
 
-            enricher = EnrichmentClient()
-            self._kev_cache = enricher.fetch_kev_catalog()
+            self._kev_cache = self._get_enricher().fetch_kev_catalog()
             self._kev_cache_at = now
             return self._kev_cache
+
+    def _get_nvd_client(self, api_key: str | None = None) -> NvdClient:
+        """Возвращает переиспользуемый NvdClient, пересоздаёт при смене ключа.
+
+        Зачем: каждый NvdClient держит requests.Session с TCP keep-alive.
+        Создавать новую сессию на каждый вызов = терять connection pooling.
+        """
+        if self._nvd_client is None or self._nvd_client_key != api_key:
+            self._nvd_client = NvdClient(api_key=api_key)
+            self._nvd_client_key = api_key
+        return self._nvd_client
+
+    def _get_enricher(self) -> EnrichmentClient:
+        """Возвращает переиспользуемый EnrichmentClient (одна сессия на lifetime Api)."""
+        if self._enricher is None:
+            self._enricher = EnrichmentClient()
+        return self._enricher
 
     # ---------- Утилиты ----------
 
     def ping(self) -> str:
         return "pong: связь с Python работает"
+
+    @staticmethod
+    def _normalize_dialog_result(result) -> str | None:
+        """Pywebview create_file_dialog возвращает разные типы в зависимости от версии:
+        tuple/list для OPEN, str для SAVE на части платформ. Нормализуем к str|None.
+        """
+        if not result:
+            return None
+        if isinstance(result, str):
+            return result
+        # tuple/list — берём первый элемент
+        try:
+            return result[0]
+        except (IndexError, TypeError):
+            return None
 
     # Расширения, которые могут привести к выполнению кода при "открытии"
     _EXECUTABLE_SUFFIXES = frozenset({
@@ -101,9 +135,10 @@ class Api:
             webview.OPEN_DIALOG,
             file_types=("JSON files (*.json)", "All files (*.*)"),
         )
-        if not result:
+        path = self._normalize_dialog_result(result)
+        if path is None:
             return {"ok": False, "error": "Файл не выбран"}
-        return {"ok": True, "path": result[0]}
+        return {"ok": True, "path": path}
 
     def select_input_file(self) -> dict:
         """Диалог выбора входного файла для сборки vault (inventory или SBOM)."""
@@ -111,9 +146,10 @@ class Api:
             webview.OPEN_DIALOG,
             file_types=("JSON files (*.json)", "All files (*.*)"),
         )
-        if not result:
+        path = self._normalize_dialog_result(result)
+        if path is None:
             return {"ok": False, "error": "Файл не выбран"}
-        return {"ok": True, "path": result[0]}
+        return {"ok": True, "path": path}
 
     def save_inventory_dialog(self, default_name: str = "inventory.json") -> dict:
         """Диалог сохранения для inventory.json."""
@@ -122,9 +158,9 @@ class Api:
             save_filename=default_name,
             file_types=("JSON files (*.json)", "All files (*.*)"),
         )
-        if not result:
+        path = self._normalize_dialog_result(result)
+        if path is None:
             return {"ok": False, "error": "Файл не выбран"}
-        path = result if isinstance(result, str) else result[0]
         return {"ok": True, "path": path}
 
     def read_inventory(self, path: str) -> dict:
@@ -187,7 +223,7 @@ class Api:
             return {"ok": False, "error": "Имя продукта пустое"}
 
         try:
-            client = NvdClient()
+            client = self._get_nvd_client()
             vendors = client.discover_vendors(product.strip())
             return {"ok": True, "vendors": vendors[:10]}
         except RuntimeError as e:
@@ -197,9 +233,10 @@ class Api:
 
     def select_vault_folder(self) -> dict:
         result = webview.windows[0].create_file_dialog(webview.FOLDER_DIALOG)
-        if not result:
+        path = self._normalize_dialog_result(result)
+        if path is None:
             return {"ok": False, "error": "Папка не выбрана"}
-        return {"ok": True, "path": result[0]}
+        return {"ok": True, "path": path}
 
     # ---------- Сканирование одного продукта ----------
 
@@ -211,7 +248,7 @@ class Api:
         api_key: str | None = None,
     ) -> dict:
         try:
-            client = NvdClient(api_key=api_key or None)
+            client = self._get_nvd_client(api_key=api_key or None)
             if not vendor:
                 vendors = client.discover_vendors(product)
                 if not vendors:
@@ -223,7 +260,7 @@ class Api:
 
             # Обогащение matched-результатов EPSS и KEV
             if matched:
-                enricher = EnrichmentClient()
+                enricher = self._get_enricher()
                 cve_ids = [v.cve_id for v in matched]
                 epss_data = enricher.fetch_epss_batch(cve_ids)
                 kev_data = self._get_kev_data()
@@ -553,9 +590,9 @@ class Api:
             save_filename=default_name,
             file_types=("ZIP archive (*.zip)", "All files (*.*)"),
         )
-        if not result:
+        path = self._normalize_dialog_result(result)
+        if path is None:
             return {"ok": False, "error": "Файл не выбран"}
-        path = result if isinstance(result, str) else result[0]
         return {"ok": True, "path": path}
 
     def select_export_png_path(self, default_name: str = "graph.png") -> dict:
@@ -565,9 +602,9 @@ class Api:
             save_filename=default_name,
             file_types=("PNG image (*.png)", "All files (*.*)"),
         )
-        if not result:
+        path = self._normalize_dialog_result(result)
+        if path is None:
             return {"ok": False, "error": "Файл не выбран"}
-        path = result if isinstance(result, str) else result[0]
         return {"ok": True, "path": path}
 
     def save_graph_png(self, png_path: str, data_uri: str) -> dict:

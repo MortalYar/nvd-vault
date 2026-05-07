@@ -441,13 +441,19 @@ class Api:
         if not self._current_vault:
             return {"ok": False, "error": "Vault не открыт"}
 
+        vault_root = self._current_vault.resolve()
         results: dict[str, str | None] = {}
         for link in links:
             if link in results:
                 continue
             found_path: str | None = None
             for subfolder in ("products", "cves", "cwes"):
-                candidate = self._current_vault / subfolder / f"{link}.md"
+                candidate = (self._current_vault / subfolder / f"{link}.md").resolve()
+                # Защита от path traversal: путь должен оставаться внутри vault
+                try:
+                    candidate.relative_to(vault_root)
+                except ValueError:
+                    continue
                 if candidate.exists():
                     found_path = f"{subfolder}/{candidate.name}"
                     break

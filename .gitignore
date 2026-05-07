@@ -37,6 +37,8 @@ test-vault/
 .mypy_cache/
 .coverage
 .coverage.*
+coverage.xml
+htmlcov/
 htmlcov/
 .tox/
 build/

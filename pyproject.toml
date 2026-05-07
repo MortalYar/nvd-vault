@@ -59,6 +59,7 @@ Changelog = "https://github.com/MortalYar/nvd-vault/releases"
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
+    "pytest-cov>=5.0.0",
     "ruff>=0.6.0",
     "pip-audit>=2.7.0",
     "mypy>=1.11.0",
@@ -83,6 +84,12 @@ packages = ["nvd_vault", "nvd_vault.api", "nvd_vault.core", "nvd_vault.webui"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = [
+    "--cov=nvd_vault",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--cov-fail-under=47",
+]
 pythonpath = ["."]
 
 [tool.ruff]

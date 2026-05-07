@@ -31,17 +31,25 @@ class Api:
         self._search_index: SearchIndex | None = None
         self._kev_cache: dict | None = None
         self._kev_cache_at: float = 0.0
+        self._kev_lock = threading.Lock()
 
     def _get_kev_data(self, ttl_seconds: int = 3600) -> dict:
         """Возвращает CISA KEV-каталог с кэшем (TTL по умолчанию — 1 час)."""
+        # Fast path: кэш ещё свежий, лок не нужен.
         now = time.monotonic()
         if self._kev_cache is not None and (now - self._kev_cache_at) < ttl_seconds:
             return self._kev_cache
 
-        enricher = EnrichmentClient()
-        self._kev_cache = enricher.fetch_kev_catalog()
-        self._kev_cache_at = now
-        return self._kev_cache
+        with self._kev_lock:
+            # Double-check: другой поток мог уже обновить кэш пока мы ждали лок.
+            now = time.monotonic()
+            if self._kev_cache is not None and (now - self._kev_cache_at) < ttl_seconds:
+                return self._kev_cache
+
+            enricher = EnrichmentClient()
+            self._kev_cache = enricher.fetch_kev_catalog()
+            self._kev_cache_at = now
+            return self._kev_cache
 
     # ---------- Утилиты ----------
 
@@ -613,10 +621,12 @@ class Api:
             return {"ok": False, "error": f"Путь vault не является папкой: {vault}"}
 
         zip_target = Path(zip_path)
+        # Атомарная запись через .tmp: если прога упадёт посередине, целевой файл не появится.
+        tmp_target = zip_target.with_suffix(zip_target.suffix + ".tmp")
 
         try:
             files_added = 0
-            with zipfile.ZipFile(zip_target, "w", zipfile.ZIP_DEFLATED) as zf:
+            with zipfile.ZipFile(tmp_target, "w", zipfile.ZIP_DEFLATED) as zf:
                 for file_path in vault.rglob("*"):
                     if not file_path.is_file():
                         continue
@@ -625,9 +635,11 @@ class Api:
                     files_added += 1
 
             if files_added == 0:
-                # Удалим пустой ZIP — пользователю он бесполезен
-                zip_target.unlink(missing_ok=True)
+                tmp_target.unlink(missing_ok=True)
                 return {"ok": False, "error": "Vault пуст — нечего экспортировать"}
+
+            # Атомарный rename — целевой файл появляется только когда полностью готов
+            tmp_target.replace(zip_target)
 
             size_mb = zip_target.stat().st_size / (1024 * 1024)
             return {
@@ -637,6 +649,8 @@ class Api:
                 "path": str(zip_target),
             }
         except Exception as e:
+            # Чистим временный файл если он успел создаться
+            tmp_target.unlink(missing_ok=True)
             return {"ok": False, "error": f"Ошибка архивирования: {e}"}
 
     def preview_build_input(self, input_path: str, input_format: str = "auto") -> dict:

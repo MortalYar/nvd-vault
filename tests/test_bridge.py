@@ -1,7 +1,7 @@
 import sys
 from unittest.mock import MagicMock
 
-sys.modules.setdefault('webview', MagicMock())
+sys.modules.setdefault("webview", MagicMock())
 
 from nvd_vault.api.bridge import Api  # noqa: E402
 

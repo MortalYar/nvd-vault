@@ -69,6 +69,7 @@ def test_leading_trailing_dots_stripped():
     assert safe_filename_stem("file.") == "file"
     assert safe_filename_stem("...") == "untitled"
 
+
 def test_windows_reserved_with_extension():
     """CON.md тоже зарезервировано — Windows блокирует имя по части до точки."""
     result = safe_filename_stem("CON.md")

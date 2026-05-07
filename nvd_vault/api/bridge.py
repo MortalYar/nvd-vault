@@ -91,14 +91,36 @@ class Api:
             return None
 
     # Расширения, которые могут привести к выполнению кода при "открытии"
-    _EXECUTABLE_SUFFIXES = frozenset({
-        # Windows
-        ".exe", ".bat", ".cmd", ".com", ".scr", ".pif", ".msi", ".msp",
-        ".ps1", ".vbs", ".vbe", ".js", ".jse", ".wsf", ".wsh", ".hta",
-        ".reg", ".lnk",
-        # macOS / Linux
-        ".app", ".command", ".sh", ".bash", ".zsh", ".desktop",
-    })
+    _EXECUTABLE_SUFFIXES = frozenset(
+        {
+            # Windows
+            ".exe",
+            ".bat",
+            ".cmd",
+            ".com",
+            ".scr",
+            ".pif",
+            ".msi",
+            ".msp",
+            ".ps1",
+            ".vbs",
+            ".vbe",
+            ".js",
+            ".jse",
+            ".wsf",
+            ".wsh",
+            ".hta",
+            ".reg",
+            ".lnk",
+            # macOS / Linux
+            ".app",
+            ".command",
+            ".sh",
+            ".bash",
+            ".zsh",
+            ".desktop",
+        }
+    )
 
     def open_path_in_explorer(self, path: str) -> dict:
         if not self._current_vault:

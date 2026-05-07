@@ -48,14 +48,42 @@ class Api:
     def ping(self) -> str:
         return "pong: связь с Python работает"
 
+    # Расширения, которые могут привести к выполнению кода при "открытии"
+    _EXECUTABLE_SUFFIXES = frozenset({
+        # Windows
+        ".exe", ".bat", ".cmd", ".com", ".scr", ".pif", ".msi", ".msp",
+        ".ps1", ".vbs", ".vbe", ".js", ".jse", ".wsf", ".wsh", ".hta",
+        ".reg", ".lnk",
+        # macOS / Linux
+        ".app", ".command", ".sh", ".bash", ".zsh", ".desktop",
+    })
+
     def open_path_in_explorer(self, path: str) -> dict:
+        if not self._current_vault:
+            return {"ok": False, "error": "Vault не открыт"}
+
+        try:
+            target = Path(path).resolve(strict=True)
+        except (FileNotFoundError, OSError) as e:
+            return {"ok": False, "error": f"Путь не существует: {e}"}
+
+        # Защита: путь должен находиться внутри открытого vault
+        try:
+            target.relative_to(self._current_vault.resolve())
+        except ValueError:
+            return {"ok": False, "error": "Путь вне vault"}
+
+        # Защита: не открываем исполняемые файлы, даже внутри vault
+        if target.suffix.lower() in self._EXECUTABLE_SUFFIXES:
+            return {"ok": False, "error": "Открытие исполняемых файлов запрещено"}
+
         try:
             if sys.platform == "win32":
-                os.startfile(path)
+                os.startfile(str(target))
             elif sys.platform == "darwin":
-                subprocess.run(["open", path], check=True)
+                subprocess.run(["open", str(target)], check=True)
             else:
-                subprocess.run(["xdg-open", path], check=True)
+                subprocess.run(["xdg-open", str(target)], check=True)
             return {"ok": True}
         except Exception as e:
             return {"ok": False, "error": str(e)}

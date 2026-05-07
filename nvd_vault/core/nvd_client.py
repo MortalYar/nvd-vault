@@ -129,9 +129,16 @@ class NvdClient:
 
             # 2xx
             try:
-                return r.json()
+                data = r.json()
             except ValueError as e:
                 raise RuntimeError(f"NVD вернул невалидный JSON: {e}") from e
+
+            if not isinstance(data, dict):
+                raise RuntimeError(
+                    f"NVD вернул неожиданный тип ответа: {type(data).__name__}, ожидался объект"
+                )
+
+            return data
 
         raise RuntimeError("NVD API error: неизвестная ошибка")
 

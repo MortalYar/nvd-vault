@@ -200,7 +200,13 @@ def render_product_note(
         return "\n".join(lines)
 
     # Группировка по severity
-    by_severity = {"CRITICAL": [], "HIGH": [], "MEDIUM": [], "LOW": [], "OTHER": []}
+    by_severity: dict[str, list[Vulnerability]] = {
+        "CRITICAL": [],
+        "HIGH": [],
+        "MEDIUM": [],
+        "LOW": [],
+        "OTHER": [],
+    }
     for v in cves:
         sev = (v.cvss_severity or "OTHER").upper()
         if sev not in by_severity:

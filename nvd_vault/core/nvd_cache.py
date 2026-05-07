@@ -69,14 +69,24 @@ class NvdCache:
             logger.warning("Битый файл кэша %s: %s", path, e)
             return None
 
+        if not isinstance(payload, dict):
+            logger.warning(
+                "Битый файл кэша %s: ожидался объект, получен %s", path, type(payload).__name__
+            )
+            return None
+
         timestamp = payload.get("timestamp", 0)
         age = time.time() - timestamp
         if age > self.ttl_seconds:
             logger.debug("Кэш-промах (TTL): %s, возраст %.0f сек", key, age)
             return None
 
+        data = payload.get("data")
+        if not isinstance(data, dict):
+            return None
+
         logger.debug("Кэш-попадание: %s (возраст %.0f сек)", key, age)
-        return payload.get("data")
+        return data
 
     def set(self, key: str, data: dict) -> None:
         """Сохраняет данные с текущим timestamp."""

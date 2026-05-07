@@ -96,7 +96,7 @@ def _extract_cyclonedx_vendor(component: dict[str, Any]) -> str | None:
 def _extract_spdx_vendor(package: dict[str, Any]) -> str | None:
     supplier = package.get("supplier")
 
-    if not supplier or supplier == "NOASSERTION":
+    if not isinstance(supplier, str) or supplier == "NOASSERTION":
         return None
 
     prefixes = ("Organization: ", "Person: ")

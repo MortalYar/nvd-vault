@@ -61,6 +61,8 @@ dev = [
     "pytest>=8.0",
     "ruff>=0.6.0",
     "pip-audit>=2.7.0",
+    "mypy>=1.11.0",
+    "types-requests>=2.31.0",
 ]
 
 [project.scripts]
@@ -103,3 +105,28 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["B011"]  # allow `assert False` in tests
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+warn_return_any = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = true
+ignore_missing_imports = true
+
+# В тестах типы не критичны — проверяем только продакшен-код
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+
+# pywebview не имеет stub-файлов
+[[tool.mypy.overrides]]
+module = "webview.*"
+ignore_missing_imports = true
+
+# packaging тоже частично типизирована
+[[tool.mypy.overrides]]
+module = "packaging.*"
+ignore_missing_imports = true

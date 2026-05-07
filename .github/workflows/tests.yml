@@ -33,7 +33,31 @@ jobs:
       - name: Run ruff
         run: |
           ruff check .
-          ruff format --check .
+          ruff format --check . 
+  
+  typecheck:
+    name: Type check (mypy)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@bcc6241fb3f725642e130ea90f590d8d273da42b # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@d87cb779c1857bd339b7663d9415b9cc9bbe25a3 # v6.2.0
+        with:
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Run mypy
+        run: python -m mypy nvd_vault
 
   audit:
     name: Audit dependencies (pip-audit)

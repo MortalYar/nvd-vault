@@ -5,7 +5,6 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
-from .path_safety import safe_filename_stem
 from .enrichment import EnrichmentClient, compute_risk_score
 from .inventory import Inventory
 from .markdown_writer import render_cve_note, render_cwe_note, render_product_note
@@ -13,6 +12,7 @@ from .matcher import cpe_matches_version
 from .models import Vulnerability
 from .nvd_cache import NvdCache
 from .nvd_client import NvdClient
+from .path_safety import safe_filename_stem
 
 
 class VaultBuilder:

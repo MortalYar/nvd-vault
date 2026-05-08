@@ -315,13 +315,14 @@ function setupBuildSection() {
         const inventoryPath = document.getElementById('inventory-path').value;
         const vaultPath = vaultInput.value;
         const inputFormat = document.getElementById('input-format').value;
+        const useOsv = document.getElementById('use-osv-checkbox').checked;
 
         buildBtn.disabled = true;
         log.textContent = 'Запуск...\n';
         showBuildProgress('STARTING', 'Запускаю сборку vault', 10);
 
         const r = await window.pywebview.api.build_vault(
-            inventoryPath, vaultPath, null, inputFormat
+            inventoryPath, vaultPath, null, inputFormat, useOsv
         );
 
         if (!r.ok) {

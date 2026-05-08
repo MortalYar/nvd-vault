@@ -194,8 +194,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Don't use disk cache for NVD responses (always fetch fresh).",
     )
-
-    parser.add_argument(
+    build.add_argument(
         "--osv",
         action="store_true",
         help="Also query OSV.dev for products with ecosystem field set in inventory",

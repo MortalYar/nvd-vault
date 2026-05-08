@@ -3,22 +3,22 @@
    ===================================*/
 
 :root {
-    --v-bg: #031427;
-    --v-surface: #102034;
-    --v-surface-low: #0b1c30;
-    --v-surface-high: #1b2b3f;
-    --v-surface-bright: #26364a;
-    --v-border: #424754;
-    --v-border-soft: #1b2b3f;
-    --v-text: #d3e4fe;
-    --v-text-muted: #c2c6d6;
-    --v-text-dim: #8c909f;
-    --v-primary: #4d8eff;
-    --v-primary-soft: #adc6ff;
-    --v-error: #ffb4ab;
-    --v-warning: #ffb786;
-    --v-medium: #f9e2af;
-    --v-success: #a6e3a1;
+    --v-bg: var(--surface-bg);
+    --v-surface: var(--surface-card);
+    --v-surface-low: var(--surface-bg);
+    --v-surface-high: var(--surface-elevated);
+    --v-surface-bright: var(--surface-overlay);
+    --v-border: var(--border-default);
+    --v-border-soft: var(--border-default);
+    --v-text: var(--text-primary);
+    --v-text-muted: var(--text-secondary);
+    --v-text-dim: var(--text-muted);
+    --v-primary: var(--accent);
+    --v-primary-soft: var(--accent-hover);
+    --v-error: var(--sev-critical-now);
+    --v-warning: var(--sev-high);
+    --v-medium: var(--sev-medium);
+    --v-success: var(--sev-low);
 }
 
 * {

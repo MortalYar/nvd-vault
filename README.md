@@ -45,6 +45,7 @@ Unlike SaaS scanners like Snyk or GitHub Dependabot, **everything runs locally**
 - GUI and CLI modes
 - CISA KEV catalog cached (1h TTL) — fast repeat scans
 - Robust NVD rate-limit handling with no false failures
+- **Optional OSV.dev integration** — enable `--osv` flag (or the GUI checkbox) to also query [OSV.dev](https://osv.dev) for packages with the `ecosystem` field set. OSV covers package ecosystems (PyPI, npm, RubyGems, Cargo, Go, Maven) and GitHub Security Advisories that NVD often misses for modern open-source.
 
 ---
 
@@ -90,10 +91,18 @@ If `--out` is omitted, the output path will be requested interactively.
   "products": [
     { "name": "kibana", "version": "8.19.9", "vendor": "elastic" },
     { "name": "logstash", "version": "8.19.5", "vendor": "elastic" },
-    { "name": "openssl", "version": "3.0.11", "vendor": "openssl" }
+    { "name": "openssl", "version": "3.0.11", "vendor": "openssl" },
+    { "name": "django", "version": "3.2.0", "vendor": "django", "ecosystem": "PyPI" }
   ]
 }
 ```
+
+Fields:
+
+- `name` (required) — product name as it appears in NVD CPE Dictionary
+- `version` (required) — exact version string
+- `vendor` (optional) — NVD vendor identifier; auto-discovered if omitted
+- `ecosystem` (optional) — package ecosystem identifier (`PyPI`, `npm`, `RubyGems`, `Maven`, `Go`, `crates.io`, etc.). Used only when `--osv` flag is enabled to query [OSV.dev](https://osv.dev) for additional advisories that NVD may miss
 
 The `vendor` field is optional — if omitted, NVD Vault will try to find the vendor automatically through the CPE Dictionary. If multiple candidates exist, the GUI opens a picker dialog.
 

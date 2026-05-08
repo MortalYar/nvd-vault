@@ -86,14 +86,22 @@ nvd-vault build examples/sample_inventory.json --out ./vault
 
 ```json
 {
-  "vault_name": "Корпоративный_ELK_кластер",
+  "vault_name": "Production_ELK_Cluster",
   "products": [
     { "name": "kibana", "version": "8.19.9", "vendor": "elastic" },
     { "name": "logstash", "version": "8.19.5", "vendor": "elastic" },
-    { "name": "openssl", "version": "3.0.11", "vendor": "openssl" }
+    { "name": "openssl", "version": "3.0.11", "vendor": "openssl" },
+    { "name": "django", "version": "3.2.0", "vendor": "django", "ecosystem": "PyPI" }
   ]
 }
 ```
+
+Поля:
+
+- `name` (обязательное) — название продукта в формате NVD CPE Dictionary
+- `version` (обязательное) — точная версия
+- `vendor` (опциональное) — идентификатор vendor'а в NVD; если не указан, определяется автоматически
+- `ecosystem` (опциональное) — идентификатор пакетной экосистемы (`PyPI`, `npm`, `RubyGems`, `Maven`, `Go`, `crates.io` и др.). Используется только при включённом флаге `--osv` для запроса в [OSV.dev](https://osv.dev) дополнительных advisories, которые NVD может не покрывать
 
 Поле `vendor` опционально — если его нет, NVD Vault попытается найти vendor автоматически через CPE Dictionary. Если кандидатов несколько, GUI откроет диалог выбора.
 

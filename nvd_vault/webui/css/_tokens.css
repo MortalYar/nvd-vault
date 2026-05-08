@@ -1,0 +1,113 @@
+/* =========================================================================
+   NVD Vault — Design Tokens
+   Generated from Stitch redesign brief.
+   All visual values used in the UI live here.
+   ========================================================================= */
+
+:root {
+  /* -------- Surface layers (dark mode) -------- */
+  --surface-bg: #0d1117;              /* App background */
+  --surface-card: #161b22;            /* Card / panel */
+  --surface-elevated: #1f2933;        /* Hover, active state */
+  --surface-input: #0d1117;           /* Input field background */
+  --surface-overlay: #272a30;         /* Modals, popovers */
+
+  /* -------- Borders -------- */
+  --border-default: #30363d;
+  --border-strong: #414752;
+  --border-focus: #58a6ff;
+
+  /* -------- Text -------- */
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --text-on-accent: #0d1117;          /* Text on primary buttons */
+
+  /* -------- Accent / interactive -------- */
+  --accent: #58a6ff;
+  --accent-hover: #79b8ff;
+  --accent-pressed: #4493e3;
+
+  /* -------- Severity tiers -------- */
+  --sev-critical-now: #f85149;
+  --sev-critical-likely: #ff7b72;
+  --sev-high: #ffa657;
+  --sev-medium: #e3b341;
+  --sev-low: #7ee787;
+  --sev-unknown: #8b949e;
+
+  /* Tinted backgrounds for severity badges (10% alpha of severity color) */
+  --sev-critical-now-bg: rgba(248, 81, 73, 0.12);
+  --sev-critical-likely-bg: rgba(255, 123, 114, 0.12);
+  --sev-high-bg: rgba(255, 166, 87, 0.12);
+  --sev-medium-bg: rgba(227, 179, 65, 0.12);
+  --sev-low-bg: rgba(126, 231, 135, 0.12);
+  --sev-unknown-bg: rgba(139, 148, 158, 0.12);
+
+  /* -------- Source badges (NVD / OSV / KEV) -------- */
+  --src-nvd: #58a6ff;
+  --src-osv: #a371f7;
+  --src-kev: #f85149;
+
+  /* -------- Status (success / warning / danger / info) -------- */
+  --status-success: #7ee787;
+  --status-warning: #e3b341;
+  --status-danger: #f85149;
+  --status-info: #58a6ff;
+
+  /* -------- Typography -------- */
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+
+  --fs-h1: 24px;
+  --fs-h2: 18px;
+  --fs-h3: 15px;
+  --fs-base: 14px;
+  --fs-secondary: 13px;
+  --fs-meta: 12px;
+  --fs-mono: 13px;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  --lh-tight: 1.3;
+  --lh-base: 1.5;
+  --lh-loose: 1.6;
+
+  /* -------- Spacing (8px grid) -------- */
+  --space-1: 4px;   /* xs */
+  --space-2: 8px;   /* sm */
+  --space-3: 16px;  /* md */
+  --space-4: 24px;  /* lg */
+  --space-5: 32px;  /* xl */
+  --space-6: 48px;  /* xxl */
+
+  /* -------- Border radius -------- */
+  --radius-sm: 4px;        /* small elements: badges, inputs, buttons */
+  --radius-md: 6px;        /* table rows, list items */
+  --radius-lg: 8px;        /* cards, panels */
+  --radius-pill: 9999px;   /* pills, avatars */
+
+  /* -------- Transitions -------- */
+  --transition-fast: 100ms ease-out;
+  --transition-base: 150ms ease-out;
+  --transition-slow: 300ms ease-out;
+}
+
+/* Use Inter from Google Fonts if available */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* Apply base font globally */
+html, body {
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  line-height: var(--lh-base);
+  color: var(--text-primary);
+  background-color: var(--surface-bg);
+}
+
+code, pre, .mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+}

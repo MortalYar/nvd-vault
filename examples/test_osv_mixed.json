@@ -1,0 +1,9 @@
+{
+  "vault_name": "OSV_Test_Mixed",
+  "products": [
+    { "name": "nginx", "version": "1.24.0", "vendor": "nginx" },
+    { "name": "openssl", "version": "3.0.11", "vendor": "openssl" },
+    { "name": "django", "version": "3.2.0", "vendor": "django", "ecosystem": "PyPI" },
+    { "name": "lodash", "version": "4.17.20", "version_match_intent": "exact", "ecosystem": "npm" }
+  ]
+}

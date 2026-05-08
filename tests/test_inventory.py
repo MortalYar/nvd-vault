@@ -136,3 +136,13 @@ def test_load_inventory_product_requires_version(tmp_path):
 
     with pytest.raises(ValueError, match="products\\[0\\]"):
         load_inventory(inventory_path)
+
+
+def test_inventory_item_with_ecosystem():
+    item = InventoryItem(name="django", version="3.2.0", ecosystem="PyPI")
+    assert item.ecosystem == "PyPI"
+
+
+def test_inventory_item_ecosystem_optional():
+    item = InventoryItem(name="something", version="1.0")
+    assert item.ecosystem is None

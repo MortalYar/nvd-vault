@@ -82,7 +82,9 @@ class OsvClient:
                 if attempt < REQUEST_RETRIES:
                     logger.warning(
                         "OSV request failed, retrying %s/%s: %s",
-                        attempt, REQUEST_RETRIES, e,
+                        attempt,
+                        REQUEST_RETRIES,
+                        e,
                     )
                     time.sleep(RETRY_SLEEP * attempt)
                     continue
@@ -101,7 +103,9 @@ class OsvClient:
                 if attempt < REQUEST_RETRIES:
                     logger.warning(
                         "OSV: %s, retrying %s/%s",
-                        response.status_code, attempt, REQUEST_RETRIES,
+                        response.status_code,
+                        attempt,
+                        REQUEST_RETRIES,
                     )
                     time.sleep(RETRY_SLEEP * attempt)
                     continue

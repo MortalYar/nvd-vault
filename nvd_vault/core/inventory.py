@@ -10,6 +10,9 @@ class InventoryItem:
     name: str
     version: str
     vendor: str | None = None
+    # Опциональная экосистема для запросов в OSV (PyPI, npm, Maven, и т.п.)
+    # Если None — OSV-источник пропустит этот продукт.
+    ecosystem: str | None = None
 
 
 @dataclass
@@ -38,6 +41,7 @@ def load_inventory(path: Path) -> Inventory:
                 name=item["name"],
                 version=item["version"],
                 vendor=item.get("vendor"),
+                ecosystem=item.get("ecosystem"),
             )
         )
 

@@ -31,7 +31,11 @@ def severity_tag(severity: str | None) -> str:
     return (severity or "unknown").lower()
 
 
-def render_cve_note(vuln: Vulnerability, products_for_cve: list[str]) -> str:
+def render_cve_note(
+    vuln: Vulnerability,
+    products_for_cve: list[str],
+    sources: list[str] | None = None,
+) -> str:
     """Генерирует .md заметку для одной CVE."""
     score = f"{vuln.cvss_score:.1f}" if vuln.cvss_score is not None else "null"
     severity = (vuln.cvss_severity or "unknown").lower()
@@ -48,6 +52,10 @@ def render_cve_note(vuln: Vulnerability, products_for_cve: list[str]) -> str:
     lines.append(f"products: {_yaml_list(products_for_cve)}")
     lines.append(f"cwes: {_yaml_list(vuln.weaknesses)}")
     lines.append(f"kev: {str(vuln.cisa_kev).lower()}")
+
+    # Источники данных (NVD, OSV и т.д.)
+    if sources:
+        lines.append(f"sources: {_yaml_list(sources)}")
 
     # EPSS
     if vuln.epss_score is not None:
@@ -101,6 +109,10 @@ def render_cve_note(vuln: Vulnerability, products_for_cve: list[str]) -> str:
             f"**EPSS:** {vuln.epss_score:.4f} "
             f"(топ {100 - epss_pct:.1f}% самых вероятных к эксплуатации)"
         )
+
+    # Источники в видимом теле — только если их больше одного
+    if sources and len(sources) > 1:
+        lines.append(f"**Источники:** {', '.join(sources)}")
 
     lines.append("")
 
@@ -169,7 +181,7 @@ def render_cve_note(vuln: Vulnerability, products_for_cve: list[str]) -> str:
         lines.append("## Источники")
         lines.append("")
         for ref in vuln.references[:15]:
-            tags_str = f" _({', '.join(ref['tags'])})_" if ref["tags"] else ""
+            tags_str = f" _({', '.join(ref['tags'])})_" if ref.get("tags") else ""
             lines.append(f"- {ref['url']}{tags_str}")
         lines.append("")
 

@@ -380,6 +380,7 @@ class Api:
         vault_path: str,
         api_key: str | None = None,
         input_format: str = "auto",
+        use_osv: bool = False,
     ) -> dict:
         if self._build_running:
             return {"ok": False, "error": "Сборка уже запущена"}
@@ -401,6 +402,7 @@ class Api:
                 builder = VaultBuilder(
                     Path(vault_path),
                     api_key=api_key or None,
+                    use_osv=use_osv,
                     progress_callback=lambda msg: self._progress_log.append(msg),
                 )
                 meta = builder.build(inventory)

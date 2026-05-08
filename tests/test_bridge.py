@@ -47,3 +47,47 @@ def test_open_path_rejects_nonexistent(tmp_path):
     api._current_vault = vault
     result = api.open_path_in_explorer(str(vault / "doesnt-exist.md"))
     assert result["ok"] is False
+
+def test_build_vault_passes_use_osv(tmp_path, monkeypatch):
+    """use_osv параметр от JS пробрасывается в VaultBuilder."""
+    captured_kwargs = {}
+
+    class FakeVaultBuilder:
+        def __init__(self, *args, **kwargs):
+            captured_kwargs.update(kwargs)
+
+        def build(self, inventory):
+            return {
+                "vault_name": "test",
+                "built_at": "2024-01-01",
+                "products_count": 0,
+                "cves_count": 0,
+                "cwes_count": 0,
+            }
+
+    monkeypatch.setattr("nvd_vault.api.bridge.VaultBuilder", FakeVaultBuilder)
+
+    api = Api()
+    inventory_path = tmp_path / "inventory.json"
+    inventory_path.write_text(
+        '{"vault_name": "test", "products": [{"name": "x", "version": "1.0"}]}'
+    )
+
+    result = api.build_vault(
+        str(inventory_path),
+        str(tmp_path / "vault"),
+        api_key=None,
+        input_format="inventory",
+        use_osv=True,
+    )
+
+    assert result.get("ok") is True
+
+    # Сборка идёт в треде, дадим ей завершиться
+    import time
+    for _ in range(50):
+        if not api._build_running:
+            break
+        time.sleep(0.05)
+
+    assert captured_kwargs.get("use_osv") is True

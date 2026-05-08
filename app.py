@@ -117,6 +117,7 @@ def run_build_command(args: argparse.Namespace) -> int:
             api_key=api_key,
             progress_callback=show_progress,
             use_cache=not args.no_cache,
+            use_osv=args.osv,
         )
         meta = builder.build(inventory)
     except RuntimeError as e:
@@ -192,6 +193,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-cache",
         action="store_true",
         help="Don't use disk cache for NVD responses (always fetch fresh).",
+    )
+
+    parser.add_argument(
+        "--osv",
+        action="store_true",
+        help="Also query OSV.dev for products with ecosystem field set in inventory",
     )
 
     # ----- Cache subcommands -----

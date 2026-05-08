@@ -48,6 +48,7 @@ def test_open_path_rejects_nonexistent(tmp_path):
     result = api.open_path_in_explorer(str(vault / "doesnt-exist.md"))
     assert result["ok"] is False
 
+
 def test_build_vault_passes_use_osv(tmp_path, monkeypatch):
     """use_osv параметр от JS пробрасывается в VaultBuilder."""
     captured_kwargs = {}
@@ -85,6 +86,7 @@ def test_build_vault_passes_use_osv(tmp_path, monkeypatch):
 
     # Сборка идёт в треде, дадим ей завершиться
     import time
+
     for _ in range(50):
         if not api._build_running:
             break

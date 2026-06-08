@@ -31,12 +31,12 @@ jobs:
         uses: actions/checkout@bcc6241fb3f725642e130ea90f590d8d273da42b # v6.0.2
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@de303a9db5f6c95afba6ef555829f5e6f14599d6 # v4.35.3
+        uses: github/codeql-action/init@eda5730a8bfb740e03a28087a958444c646e5842 # v4.35.3
         with:
           languages: ${{ matrix.language }}
           queries: security-extended,security-and-quality
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@de303a9db5f6c95afba6ef555829f5e6f14599d6 # v4.35.3
+        uses: github/codeql-action/analyze@eda5730a8bfb740e03a28087a958444c646e5842 # v4.35.3
         with:
           category: "/language:${{ matrix.language }}"
